@@ -1,0 +1,54 @@
+# Environment & Secrets
+.env
+.env.local
+*.env
+
+# Python caches & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing & Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node & Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.npm
+.eslintcache
+
+# Logs & Runtime artifacts
+*.log
+artifacts/
+Capstone_Project_Dataset_FTTT_2026/tools/tickets_created.csv
+outputs/
+input_audio/*.wav
+!input_audio/sample_customer_call.wav
+
+# OS artifacts
+.DS_Store
+Thumbs.db

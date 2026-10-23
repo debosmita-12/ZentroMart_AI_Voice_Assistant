@@ -1,0 +1,16 @@
+{
+  "total_questions": 52,
+  "step1_baseline": {
+    "decision_accuracy_pct": 80.77,
+    "must_include_rate_pct": 7.69,
+    "hallucination_avoidance_pct": 100.0,
+    "overall_pass_pct": 1.92
+  },
+  "step2_rag": {
+    "decision_accuracy_pct": 88.46,
+    "must_include_rate_pct": 25.0,
+    "hallucination_avoidance_pct": 100.0,
+    "evidence_retrieval_hit_pct": 75.0,
+    "overall_pass_pct": 19.23
+  }
+}

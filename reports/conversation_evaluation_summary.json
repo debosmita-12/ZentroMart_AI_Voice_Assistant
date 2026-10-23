@@ -1,0 +1,8 @@
+{
+  "total_conversations": 23,
+  "total_turns": 96,
+  "passed_turns": 72,
+  "turn_pass_rate_pct": 75.0,
+  "verification_gate_accuracy_pct": 100.0,
+  "tool_call_accuracy_pct": 87.04
+}

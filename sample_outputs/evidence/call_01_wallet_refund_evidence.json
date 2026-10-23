@@ -1,0 +1,6 @@
+{
+  "file": "call_01_wallet_refund.wav",
+  "transcript": "How fast are refunds to the ZentroMart Wallet?",
+  "evidence_used": ["REF-2", "KB-00.1"],
+  "tool_call": ""
+}

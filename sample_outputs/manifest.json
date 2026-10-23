@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-10-20T10:15:30",
+  "input_directory": "./input_audio",
+  "total_files": 2,
+  "processed_files": 2,
+  "successful_files": 2,
+  "failed_files": 0,
+  "items": [
+    {
+      "file": "call_01_wallet_refund.wav",
+      "session_id": "batch_call_01_wallet_refund",
+      "transcript": "How fast are refunds to the ZentroMart Wallet?",
+      "assistant_reply": "Refunds to ZentroMart Wallet are instant, credited within 2 hours of pickup completion.",
+      "output_audio": "audio/call_01_wallet_refund_reply.wav",
+      "evidence_used": ["REF-2", "KB-00.1"],
+      "tool_call": "",
+      "verified": false,
+      "status": "success",
+      "error": ""
+    },
+    {
+      "file": "call_02_damage_escalation.wav",
+      "session_id": "batch_call_02_damage_escalation",
+      "transcript": "I received my Smart TV damaged and want immediate replacement.",
+      "assistant_reply": "For high-value electronics exceeding ₹10,000, replacement claims require physical inspection by our specialist team. I have logged ticket TKT9f482a17cb42 for Priority Resolution.",
+      "output_audio": "audio/call_02_damage_escalation_reply.wav",
+      "evidence_used": ["DWM-3", "ESC-1", "ESC-4"],
+      "tool_call": "create_ticket()",
+      "verified": true,
+      "status": "success",
+      "error": ""
+    }
+  ]
+}

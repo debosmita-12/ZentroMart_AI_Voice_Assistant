@@ -425,7 +425,7 @@ Project: ZentroMart AI Voice Assistant — VoiceOps 2026
 
 Developed as part of **VoiceOps 2026**, associated with the Consulting & Analytics Club, IIT Guwahati, in collaboration with **Gnani.ai**.
 
-## 📄 License
+## License
 
 Refer to the repository's license file for the applicable terms of use.
 

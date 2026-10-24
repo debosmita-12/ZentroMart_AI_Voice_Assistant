@@ -4,7 +4,7 @@
 **An intelligent, voice-enabled customer support assistant that combines Retrieval-Augmented Generation (RAG), multi-turn conversational AI, and secure order-management tools to deliver grounded, policy-aware customer experiences.**
 
 <p align="center">
-  <a href="https://zentro-mart-ai-voice-assistant.vercel.app"> Live Demo</a> ·
+  <a href="https://zentro-mart-ai-voice-assistant.vercel.app/"> Live Demo</a> ·
   <a href="https://github.com/debosmita-12/ZentroMart_AI_Voice_Assistant"> GitHub Repository</a> ·
   <a href="https://zentromart-ai-backend.onrender.com/api/health"> Backend Health</a>
 </p>

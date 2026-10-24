@@ -31,7 +31,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Configure CORS explicitly for Vercel production frontend and local development.
+# Configure CORS explicitly for Render & Vercel production frontend and local development.
 # Avoids wildcard '*' when allow_credentials=True in accordance with W3C CORS specifications.
 cors_origins = [
     "http://localhost:5173",
@@ -40,7 +40,10 @@ cors_origins = [
     "http://127.0.0.1:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "https://zentromart-ai.onrender.com",
     "https://zentromart-ai-backend.onrender.com",
+    "https://zentro-mart-ai-voice-assistant.vercel.app",
+    "https://zentromart-ai-voice-assistant.vercel.app",
 ]
 
 extra_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
@@ -55,7 +58,7 @@ app.add_middleware(
     allow_origins=cors_origins,
     allow_origin_regex=r"^https://.*\.vercel\.app$",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 

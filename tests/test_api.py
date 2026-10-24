@@ -33,19 +33,75 @@ def test_kb_search_endpoint():
     assert "REF-2" in sec_ids
 
 
-def test_cors_vercel_production_origin():
-    """Verify that Vercel production and preview origins receive valid CORS headers."""
-    # Test production Vercel origin
+def test_cors_render_production_origin_options_preflight():
+    """Verify that Render production frontend origin receives valid CORS headers on OPTIONS preflight."""
     res = client.options(
         "/api/health",
         headers={
-            "Origin": "https://zentromart-ai-voice-assistant.vercel.app",
+            "Origin": "https://zentromart-ai.onrender.com",
             "Access-Control-Request-Method": "GET",
         },
     )
     assert res.status_code == 200
-    assert res.headers.get("access-control-allow-origin") == "https://zentromart-ai-voice-assistant.vercel.app"
+    assert res.headers.get("access-control-allow-origin") == "https://zentromart-ai.onrender.com"
     assert res.headers.get("access-control-allow-credentials") == "true"
+    assert "GET" in res.headers.get("access-control-allow-methods", "")
+
+
+def test_cors_render_production_origin_get():
+    """Verify that Render production frontend origin receives valid CORS headers on actual GET request."""
+    res = client.get(
+        "/api/health",
+        headers={
+            "Origin": "https://zentromart-ai.onrender.com",
+        },
+    )
+    assert res.status_code == 200
+    assert res.headers.get("access-control-allow-origin") == "https://zentromart-ai.onrender.com"
+    assert res.headers.get("access-control-allow-credentials") == "true"
+
+
+def test_cors_render_production_origin_chat_preflight():
+    """Verify that Render production frontend origin receives valid CORS headers for POST on /api/chat."""
+    res = client.options(
+        "/api/chat",
+        headers={
+            "Origin": "https://zentromart-ai.onrender.com",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "Content-Type",
+        },
+    )
+    assert res.status_code == 200
+    assert res.headers.get("access-control-allow-origin") == "https://zentromart-ai.onrender.com"
+    assert res.headers.get("access-control-allow-credentials") == "true"
+
+
+def test_cors_vercel_production_origin():
+    """Verify that Vercel production origin (with and without hyphen) receives valid CORS headers."""
+    for origin in [
+        "https://zentro-mart-ai-voice-assistant.vercel.app",
+        "https://zentromart-ai-voice-assistant.vercel.app",
+    ]:
+        res_preflight = client.options(
+            "/api/health",
+            headers={
+                "Origin": origin,
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+        assert res_preflight.status_code == 200
+        assert res_preflight.headers.get("access-control-allow-origin") == origin
+        assert res_preflight.headers.get("access-control-allow-credentials") == "true"
+
+        res_get = client.get(
+            "/api/health",
+            headers={
+                "Origin": origin,
+            },
+        )
+        assert res_get.status_code == 200
+        assert res_get.headers.get("access-control-allow-origin") == origin
+        assert res_get.headers.get("access-control-allow-credentials") == "true"
 
 
 def test_cors_vercel_preview_origin():

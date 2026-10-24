@@ -1,314 +1,436 @@
-# ZentroMart AI Voice Assistant — VoiceOps 2026
+# ZentroMart AI Voice Assistant
+### VoiceOps 2026 · AI-Powered Customer Support
 
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev/)
-[![Gnani.ai](https://img.shields.io/badge/Speech-Gnani%20Vachana-emerald.svg)](https://app.gnani.ai/voice)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+**An intelligent, voice-enabled customer support assistant that combines Retrieval-Augmented Generation (RAG), multi-turn conversational AI, and secure order-management tools to deliver grounded, policy-aware customer experiences.**
 
-An evidence-grounded, multi-turn AI Customer Support Voice Assistant for **ZentroMart** (a fictional Indian e-commerce platform for groceries and electronics), built for the **IIT Guwahati × Gnani.ai VoiceOps 2026 Capstone**.
-
-The project marries two rigorous objectives:
-1. **IIT Guwahati VoiceOps 2026 Capstone Requirements:** All four progressive engineering stages, dataset-backed business logic, policy precedence enforcement, caller identity gating, official tool execution (`lookup_order`, `create_ticket`), Gnani speech integration (`gnani-vachana` SDK), batch audio CLI runner, automated evaluations, and reproducible outputs.
-2. **Cinematic Lavender UI/UX:** A dedicated AI product landing page and interactive support console featuring a light lilac/lavender palette (`#F8F5FF`, `#C4B5FD`, `#6D4CC3`), subtle looping background video, liquid-glass frosted components, high-contrast dark purple typography, responsive layout, and prominent credit: **Made by — Debosmita**.
+<p align="center">
+  <a href="https://zentro-mart-ai-voice-assistant.vercel.app"> Live Demo</a> ·
+  <a href="https://github.com/debosmita-12/ZentroMart_AI_Voice_Assistant"> GitHub Repository</a> ·
+  <a href="https://zentromart-ai-backend.onrender.com/api/health"> Backend Health</a>
+</p>
 
 ---
 
-## 📑 Table of Contents
+## Overview
 
-- [System Architecture](#system-architecture)
-- [The 4 Capstone Stages](#the-4-capstone-stages)
-- [Directory Structure](#directory-structure)
-- [Prerequisites & Installation](#prerequisites--installation)
-- [Dataset Placement & Validation](#dataset-placement--validation)
-- [Environment Configuration](#environment-configuration)
-- [Running the Application](#running-the-application)
-- [Mandatory Batch Audio CLI Runner](#mandatory-batch-audio-cli-runner)
-- [Automated Evaluations & Benchmarks](#automated-evaluations--benchmarks)
-- [Test Suite](#test-suite)
-- [Security & Dataset Handling](#security--dataset-handling)
-- [Deliverables & Submission ZIP](#deliverables--submission-zip)
+ZentroMart AI Voice Assistant is an AI-powered customer support application developed for **VoiceOps 2026**, the capstone project associated with the Consulting & Analytics Club, IIT Guwahati, in collaboration with Gnani.ai.
+
+The application helps customers understand store policies, resolve order-related queries, and initiate support requests through natural-language conversations.
+
+Rather than relying exclusively on an LLM's general knowledge, the system retrieves relevant information from a structured company knowledge base and uses backend tools for supported customer-service operations.
+
+The project brings together four key capabilities:
+
+- **Prompt Engineering:** Establishes a baseline for instruction-following customer support.
+- **Retrieval-Augmented Generation (RAG):** Grounds responses in company documentation and relevant policy evidence.
+- **Multi-Turn AI Agent:** Supports contextual conversations, verified order lookups, and ticket creation.
+- **Voice Integration:** Uses Gnani.ai for speech-to-text (STT) and text-to-speech (TTS).
+
+## Key Features
+
+### Grounded AI Responses
+- Retrieves relevant information from the company knowledge base.
+- Uses policy documents and supporting evidence to inform responses.
+- Helps reduce unsupported claims and inconsistent policy answers.
+- Supports knowledge-base search for inspection and debugging.
+
+### Multi-Turn Conversational Support
+- Maintains conversational context across turns.
+- Handles follow-up questions and requests for clarification.
+- Guides users through customer-support workflows.
+- Supports policy-aware responses and escalation where appropriate.
+
+### Secure Order Lookup
+- Integrates with the backend order-lookup tool.
+- Requires customer verification before disclosing protected order details.
+- Supports verification using the phone number's last four digits or the delivery pincode, according to the implemented workflow.
+- Keeps order identifiers as strings to preserve their exact values.
+
+### Support Ticket Creation
+- Supports ticket creation through a backend tool.
+- Uses tool results to determine whether ticket creation succeeded.
+- Avoids claiming that a ticket was created when the tool does not confirm success.
+
+### Voice-Enabled Interaction
+- Integrates Gnani.ai for speech recognition and speech generation.
+- Supports audio upload and spoken response playback through the application.
+- Resolves generated audio URLs against the backend service.
+- Keeps speech processing on the configured Gnani integration rather than silently switching to an alternative speech provider.
+
+### Evaluation and Developer Tools
+- Provides access to evaluation status and knowledge-base search endpoints.
+- Supports testing of grounded responses, verification requirements, and tool execution.
+- Includes automated tests for important API and application behaviours.
 
 ---
 
-## 🏛️ System Architecture
+## System Architecture
 
 ```text
-[ Customer Audio ] ──► [ Gnani STT (en-IN / hi-en / 10 langs) ] ──┐
-                                                                   ▼
-[ Customer Text  ] ──────────────────────────────────────────► [ Step 3 Conversational Agent ]
-                                                                   │
-                       ┌───────────────────────────────────────────┴───────────────────────────────────────────┐
-                       ▼                                                                                       ▼
-         [ Hybrid RAG Knowledge Base ]                                                           [ Official Tools ]
-       • 21 Markdown Policies & Guides                                                         • lookup_order(id, proof)
-       • Precedence: Policy > Guide > Help > FAQ > Mkt                                         • Caller ID Verification (4-digit phone / pincode)
-       • Reference Date: 20 Oct 2026                                                           • create_ticket(summary, order_id)
-       • Mon-Sat Business Days (Excl. 4 Holidays)                                              • Human Escalation (> ₹10k damage / compensation)
-                       │                                                                                       │
-                       └───────────────────────────────────────────┬───────────────────────────────────────────┘
-                                                                   ▼
-                                                       [ Grounded Agent Response ]
-                                                                   │
-                                                                   ▼
-                                               [ Gnani TTS (timbre-v2.5, Kaveri Voice) ]
-                                                                   │
-                                                                   ▼
-                                                        [ Spoken Output WAV ]
+                    ┌───────────────────────────┐
+                    │       User Interface      │
+                    │       React + Vite        │
+                    └─────────────┬─────────────┘
+                                  │
+                     Text Input / Audio Upload
+                                  │
+                                  ▼
+                    ┌───────────────────────────┐
+                    │       FastAPI Backend     │
+                    │     API + Orchestration   │
+                    └─────────────┬─────────────┘
+                                  │
+                    ┌─────────────┼──────────────┐
+                    │             │              │
+                    ▼             ▼              ▼
+             ┌────────────┐ ┌────────────┐ ┌──────────────┐
+             │ Gemini LLM │ │ RAG / KB   │ │ Agent Tools  │
+             │ Reasoning  │ │ Retrieval  │ │ Orders/Tickets│
+             └────────────┘ └────────────┘ └──────────────┘
+                    │             │              │
+                    └─────────────┼──────────────┘
+                                  │
+                                  ▼
+                    ┌───────────────────────────┐
+                    │     Response Generation   │
+                    └─────────────┬─────────────┘
+                                  │
+                         Text or Audio Response
+                                  │
+                                  ▼
+                    ┌───────────────────────────┐
+                    │       Gnani.ai STT/TTS    │
+                    └───────────────────────────┘
 ```
 
----
+*Logical architecture overview; exact request flow depends on the selected interaction mode.*
 
-## 🚀 The 4 Capstone Stages
+## Technology Stack
 
-### Stage 1: LLM Prompting Baseline
-- Implements a conversational support persona without access to ZentroMart's private policies or database.
-- Introduces itself as an AI assistant in the opening turn (`STY-1`).
-- Evaluated on `practice/questions.csv` to establish an honest baseline (1.92% overall pass rate due to lack of internal policy knowledge).
+| Component | Technology |
+|---|---|
+| Frontend | React, TypeScript, Vite |
+| Backend | Python, FastAPI |
+| Language model | Google Gemini API |
+| Retrieval and knowledge base | RAG pipeline over company documentation |
+| Speech processing | Gnani.ai STT and TTS |
+| API communication | HTTP / REST |
+| Frontend hosting | Vercel |
+| Backend hosting | Render |
+| Testing | Pytest, frontend production build |
+| Version control | Git and GitHub |
 
-### Stage 2: Document-Grounded RAG Pipeline
-- Ingests all 21 Markdown files in `kb/` with preserved section IDs (e.g. `[RET-2]`, `[IDV-2]`, `[WAR-2]`).
-- Indexes 70 product rows from `products.csv` as catalog evidence chunks (`products.csv:<sku>`).
-- Strictly enforces policy precedence: **Current Policy (Rank 1) > Agent Guides (Rank 2) > Help (Rank 3) > FAQs (Rank 4) > Marketing (Rank 5)**.
-- `pol_returns_v4.md` overrides superseded v3, and policy `REF-2` overrides `FAQ-1` (instant 2-hour wallet refund vs 5-7 days).
-- Uses **20 October 2026** as reference date. Business days run Monday–Saturday excluding warehouse holidays (`holidays.csv`). Return windows use calendar days.
-- **Results:** Achieves **88.46% decision accuracy**, **75.0% evidence hit rate**, and a **10× improvement in overall pass rate** over baseline.
-
-### Stage 3: Multi-turn Context & Tool Execution
-- Maintains conversational memory, order tracking, and coreference resolution (e.g., *"How long will that take?"* -> wallet refund for active order).
-- **Caller Identity Verification:** Integrates official `lookup_order(order_id)`. Withholds all order details until the customer provides the last 4 digits of their registered phone or 6-digit delivery pincode. Max one retry. Zero data leaks (**100% verification gate compliance**).
-- **Human Escalation:** Demands for unauthorized compensation or high-value damage claims (> ₹10,000) invoke `create_ticket(summary, order_id, reason, intent)`. Confirms handover only after `created=True`.
-
-### Stage 4: Gnani Speech Integration
-- Uses official `gnani-vachana` SDK: `GnaniSTTClient` for audio transcription and `GnaniTTSClient` for spoken synthesis.
-- **Strict Compliance:** No third-party STT/TTS fallbacks are permitted or used.
-- Model: `timbre-v2.5` | English Voice: `Kaveri` | Supports 10 Indian regional languages + Hinglish (`en-IN`).
-
----
-
-## 📁 Directory Structure
+## Repository Structure
 
 ```text
 ZentroMart_AI_Voice_Assistant/
-├── Capstone_Project_Dataset_FTTT_2026/   # Official synthetic dataset
-│   ├── data/                             # 7 CSV tables (customers, orders, items, products, etc.)
-│   ├── kb/                               # 21 Markdown company policy documents
-│   ├── practice/                         # 52 practice questions & 23 conversations (96 turns)
-│   ├── tools/                            # Official synthetic Python tools (lookup_order, create_ticket)
-│   ├── DATA_DICTIONARY.md                # Schema definitions
-│   └── validate_dataset.py               # Dataset validator
-├── frontend/                             # Cinematic React + Vite + Tailwind UI
-│   ├── public/media/                     # Cinematic 5s looping video (hero-loop.mp4) & poster
+│
+├── frontend/
+│   ├── public/
 │   ├── src/
-│   │   ├── components/                   # Navbar, Hero, SupportWorkspace, Capabilities, etc.
-│   │   ├── types.ts                      # TypeScript interfaces
-│   │   ├── App.tsx                       # Unified application
-│   │   └── index.css                     # Liquid-glass CSS specification
+│   │   ├── components/
+│   │   │   ├── SupportWorkspace.tsx
+│   │   │   └── DeveloperDrawer.tsx
+│   │   ├── config/
+│   │   │   └── api.ts
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   ├── index.css
+│   │   └── vite-env.d.ts
+│   ├── .env.example
+│   ├── .env.production
 │   ├── package.json
 │   └── vite.config.ts
+│
 ├── src/
-│   ├── agent/                            # Baseline, RAG Agent, Conversational Agent, LLM Client
-│   ├── rag/                              # Ingestion, Chunking, Hybrid Retriever, Precedence Ranker
-│   ├── data/                             # Pandas CSV Loader with strict string type preservation
-│   ├── voice/                            # Gnani STT & TTS Service wrapper (gnani-vachana)
-│   ├── api/                              # FastAPI endpoints (/api/chat, /api/voice/process, /api/health)
-│   ├── evaluation/                       # Automated evaluators for Step 1 vs 2 and Conversations
-│   └── utils/                            # Date rules (20 Oct 2026, Mon-Sat business days, holidays)
-├── tests/                                # 18 PyTest unit & integration tests (100% pass)
+│   └── api/
+│       └── main.py
+│
+├── tests/
+│   └── test_api.py
+│
+├── Capstone_Project_Dataset_FTTT_2026/
+│   ├── Knowledge Base Documents
+│   ├── CSV Data Files
+│   └── Practice / Evaluation Data
+│
 ├── scripts/
-│   ├── generate_cinematic_loop.py        # Generates seamless 5s looping background video
-│   └── generate_report.py                # Generates official 4-page report.pdf
-├── input_audio/                          # Directory for customer audio files
-├── outputs/                              # Batch runner output manifests, audio, and transcripts
-├── sample_outputs/                       # Sanitized sample outputs for submission archive
-├── reports/                              # Benchmark evaluation summaries (JSON and CSV)
-├── run.py                                # Mandatory Batch Audio CLI Runner
-├── requirements.txt                      # Python dependencies
-├── .env.example                          # Configuration template
-├── demo_script.md                        # 2-minute video presentation walkthrough
-├── report.pdf                            # 4-page official submission report
+├── input_audio/
+├── reports/
+├── sample_outputs/
+├── .gitignore
 └── README.md
 ```
 
+*The tree highlights the principal application components. Refer to the repository for the complete file structure.*
+
 ---
 
-## ⚙️ Prerequisites & Installation
+## Getting Started
 
-### 1. Python Environment
-Requires Python 3.10+ (tested on Python 3.14).
+### Prerequisites
+
+Install the following before running the application locally:
+
+- Python 3.10 or a compatible version supported by the project's dependencies.
+- Node.js and npm.
+- Git.
+- Google Gemini API credentials.
+- Gnani.ai API credentials for live voice functionality.
+
+### 1. Clone the Repository
+
 ```bash
-# Clone the repository
 git clone https://github.com/debosmita-12/ZentroMart_AI_Voice_Assistant.git
-cd ZentroMart_AI_Voice_Assistant
 
-# Install Python dependencies
+cd ZentroMart_AI_Voice_Assistant
+```
+
+### 2. Configure Environment Variables
+
+Create a `.env` file in the repository root for backend configuration. Use `.env.example` as a reference if available.
+
+```dotenv
+GOOGLE_API_KEY=your_google_api_key
+GNANI_API_KEY=your_gnani_api_key
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+```
+
+Never commit actual API keys or private credentials.
+
+### 3. Set Up the Backend
+
+Create and activate a virtual environment:
+
+**Windows**
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+**macOS / Linux**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install the backend dependencies using the dependency file provided by the repository:
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. Frontend Environment (Optional for standalone UI development)
-Requires Node.js 18+ and npm.
+Start the FastAPI application from the repository root:
+
+```bash
+uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+If the repository uses a different dependency-file location or application entry point, follow the corresponding project configuration.
+
+The local backend should be available at:
+
+- API: `http://localhost:8000`
+- Interactive API documentation, if enabled: `http://localhost:8000/docs`
+
+### 4. Set Up the Frontend
+
+Open a second terminal:
+
 ```bash
 cd frontend
 npm install
-npm run build
-cd ..
 ```
 
----
+Create `frontend/.env.local` if required:
 
-## 🔍 Dataset Placement & Validation
-
-The official synthetic dataset is located in `Capstone_Project_Dataset_FTTT_2026/`. To run the offline validation script:
-
-```bash
-python Capstone_Project_Dataset_FTTT_2026/validate_dataset.py
-```
-Expected output:
-```text
-PASS — all 9 CSVs, 21 KB documents, primary/foreign keys, order math,
-       practice evidence, verification gates and company naming validated.
-       1,000 orders | 1,783 items | 244 logs | 52 questions | 23 conversations
-```
-
----
-
-## 🔑 Environment Configuration
-
-Create a local `.env` file from `.env.example`:
-
-```bash
-cp .env.example .env
-```
-
-Populate the keys:
 ```dotenv
-# Google Gemini API Key (for LLM generation and embeddings)
-GOOGLE_API_KEY=your_google_gemini_api_key_here
-
-# Gnani Voice API Key (for STT and TTS)
-GNANI_API_KEY=your_gnani_api_key_here
-
-# Model options
-LLM_MODEL=gemini-2.5-flash
-LOG_LEVEL=INFO
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
----
+Start the development server:
 
-## 🖥️ Running the Application
-
-### Option A: Full-Stack Mode (Single Command)
-FastAPI serves both the backend API and the compiled cinematic frontend on port `8000`:
 ```bash
-uvicorn src.api.main:app --host 127.0.0.1 --port 8000 --reload
-```
-Open your browser at: **`http://localhost:8000`**
-
-### Option B: Concurrent Frontend Dev Mode
-For interactive frontend development with Vite HMR:
-```bash
-# Terminal 1: Backend API
-uvicorn src.api.main:app --port 8000 --reload
-
-# Terminal 2: Frontend Vite
-cd frontend
 npm run dev
 ```
-Open your browser at: **`http://localhost:5173`**
 
-### Option C: Production Cloud Deployment (Vercel + Render)
-- **Backend (Render):** FastAPI hosted at `https://zentromart-ai-backend.onrender.com` with CORS configured for Vercel origins (`allow_origin_regex=r"^https://.*\.vercel\.app$"`).
-- **Frontend (Vercel):** Single-Page Application deployed from the `frontend/` directory.
-  - Environment Variable on Vercel: `VITE_API_BASE_URL=https://zentromart-ai-backend.onrender.com`
-  - Audio and API paths automatically resolve against the production Render backend while securely retaining all API keys (`GOOGLE_API_KEY`, `GNANI_API_KEY`) on Render.
+Open the local URL printed by Vite, typically `http://localhost:5173`.
 
----
+### 5. Verify the Backend
 
-## 🎙️ Mandatory Batch Audio CLI Runner
+Open the health endpoint:
 
-The project fulfills the capstone requirement for offline batch audio testing:
-
-```bash
-python run.py --input-dir ./input_audio --output-dir ./outputs
-```
-
-Optional arguments:
-- `--language`: Language code (default: `en-IN`, also supports `hi-IN`, `gu-IN`, `ta-IN`, `te-IN`, etc.).
-
-### What happens during a batch run:
-1. Discovers all audio files in `--input-dir` (`.wav`, `.mp3`, `.m4a`, `.ogg`, `.flac`).
-2. Transcribes customer speech using **Gnani STT**.
-3. Evaluates transcript using the **Step 3 Conversational Agent**.
-4. Grounds answers using **Knowledge Base evidence** and executes tools if applicable.
-5. Synthesizes assistant reply audio using **Gnani TTS** (`timbre-v2.5`, `Kaveri` voice).
-6. Generates reproducible outputs:
-   - `outputs/manifest.json`: Full structured JSON execution manifest.
-   - `outputs/results.csv`: Table containing file, transcript, reply, tool calls, and status.
-   - `outputs/transcripts/<name>.txt`: Transcripts and reply texts.
-   - `outputs/evidence/<name>_evidence.json`: Exact chunk IDs and tool records.
-   - `outputs/audio/<name>_reply.wav`: Spoken output WAV files.
-
----
-
-## 📊 Automated Evaluations & Benchmarks
-
-To execute the automated evaluation pipelines:
-
-### 1. Step 1 Baseline vs. Step 2 RAG (52 Questions)
-```bash
-python src/evaluation/eval_step1_vs_step2.py
-```
-**Measured Benchmarks:**
-- Step 1 Baseline Decision Accuracy: **80.77%** | Overall Pass: **1.92%**
-- Step 2 Grounded RAG Decision Accuracy: **88.46%** | Overall Pass: **19.23% (10× gain)**
-- Step 2 Evidence Retrieval Hit Rate: **75.0%**
-- Hallucination Avoidance: **100.0%** (zero false dates or policies promised)
-
-### 2. Multi-turn Conversation Evaluation (23 Scenarios, 96 Turns)
-```bash
-python src/evaluation/eval_conversations.py
-```
-**Measured Benchmarks:**
-- Verification Gate Compliance: **100.0%** (no order details disclosed before verification)
-- Tool Call Matching Accuracy: **87.04%** (`lookup_order` & `create_ticket`)
-- Turn Pass Rate: **75.0%**
-
----
-
-## 🧪 Test Suite
- 
-Run the 46 automated unit, integration, and voice conversation regression tests using PyTest:
-
-```bash
-python -m pytest tests/
-```
-Output:
 ```text
-tests/test_api.py ...                                                    [  6%]
-tests/test_conversational_agent.py ...                                   [ 13%]
-tests/test_dataset.py ...                                                [ 19%]
-tests/test_date_utils.py ....                                            [ 28%]
-tests/test_rag.py ...                                                    [ 34%]
-tests/test_voice.py ..                                                   [ 39%]
-tests/test_voice_conversation_flow.py ............................       [100%]
-======================= 46 passed in 7.43s ========================
+http://localhost:8000/api/health
 ```
 
----
-
-## 🔒 Security & Dataset Handling
-
-- **Zero Secrets Committed:** `.env` is excluded in `.gitignore`. Only `.env.example` is committed.
-- **Synthetic Data:** The dataset is synthetic. Customer phone numbers use the dummy prefix `+91 5...` and emails are on `example.com`.
-- **Identity Gated Lookups:** Order data is locked behind caller verification. Lookups are not retained across sessions.
-- **Submission ZIP Cleanliness:** The final submission ZIP contains no virtual environments, `node_modules`, API keys, or copies of the dataset.
+The endpoint should return a healthy JSON response when the backend is running correctly and its required configuration is available.
 
 ---
 
-## 📦 Deliverables & Submission ZIP
+## Deployment
 
-- **Made by — Debosmita** (IIT Guwahati × Gnani.ai VoiceOps 2026)
-- **Public GitHub Repo:** [https://github.com/debosmita-12/ZentroMart_AI_Voice_Assistant](https://github.com/debosmita-12/ZentroMart_AI_Voice_Assistant)
-- **4-Page Report:** [`report.pdf`](report.pdf)
-- **Demo Script (120s):** [`demo_script.md`](demo_script.md)
-- **Submission Archive:** `team_name_voiceops.zip` (generated via `python scripts/create_submission_zip.py`)
+The application uses a separate frontend and backend deployment.
+
+| Service | Platform | Purpose |
+|---|---|---|
+| Frontend | Vercel | Serves the React/Vite application |
+| Backend | Render | Hosts the FastAPI service |
+| LLM | Google Gemini API | Generates responses |
+| Speech services | Gnani.ai | Processes speech input and output |
+
+### Frontend — Vercel
+
+Configure the following environment variable in the Vercel project settings:
+
+```dotenv
+VITE_API_BASE_URL=https://zentromart-ai-backend.onrender.com
+```
+
+Use the **Config** variable type for this non-sensitive URL. Vite variables prefixed with `VITE_` are exposed to client-side code, so never place API secrets in them.
+
+Ensure that:
+
+1. The Vercel project is connected to this GitHub repository.
+2. The production branch is `main`.
+3. The root directory is `frontend`.
+4. A new production build is created after frontend or environment-variable changes.
+
+### Backend — Render
+
+Configure the backend environment variables in Render:
+
+```dotenv
+GOOGLE_API_KEY=your_google_api_key
+GNANI_API_KEY=your_gnani_api_key
+CORS_ALLOWED_ORIGINS=https://zentro-mart-ai-voice-assistant.vercel.app
+```
+
+Set the actual production origin in `CORS_ALLOWED_ORIGINS`. Add other trusted origins only when needed. The backend must explicitly permit the deployed frontend's origin through its CORS configuration.
+
+Configure the Render start command to match the FastAPI entry point and hosting requirements.
+
+**Important:** A successful frontend deployment does not necessarily mean the backend is reachable. Verify the health endpoint and inspect browser Network and Console errors if the interface remains in a connecting state.
+
+---
+
+## Security and Reliability
+
+The application is designed around several important customer-support safeguards:
+
+- **Server-side secrets:** Gemini and Gnani credentials belong in backend environment variables, never in frontend source code.
+- **Caller verification:** Protected order details must not be disclosed before the required verification succeeds.
+- **Tool-confirmed actions:** The assistant should report successful ticket creation only when confirmed by the backend tool.
+- **Grounded responses:** Company policies and retrieved evidence should guide policy-related answers.
+- **CORS restrictions:** Only trusted origins should be permitted.
+- **Identifier preservation:** Order and customer identifiers should be handled as strings where leading zeros or exact formatting matter.
+- **Honest failure handling:** API errors, missing data, and unavailable integrations should not be presented as successful operations.
+
+Do not publish `.env` files, API keys, private customer information, or sensitive production logs.
+
+---
+
+## Testing and Evaluation
+
+### Run Backend Tests
+
+From the repository root, activate the virtual environment and run:
+
+```bash
+python -m pytest tests/ -v
+```
+
+### Build the Frontend
+
+```bash
+cd frontend
+npm run build
+```
+
+### Recommended Evaluation Dimensions
+
+| Evaluation area | What to verify |
+|---|---|
+| Response quality | Relevance, correctness, and instruction following |
+| RAG grounding | Whether answers reflect the retrieved documentation |
+| Evidence quality | Whether supporting source information is available when required |
+| Verification | Whether protected order details remain gated |
+| Tool execution | Whether order lookup and ticket creation behave correctly |
+| Multi-turn dialogue | Whether follow-up questions preserve relevant context |
+| Policy compliance | Whether unsupported requests are refused or escalated appropriately |
+| Voice pipeline | Whether Gnani STT/TTS works with the configured credentials |
+| Reliability | Whether errors and unavailable services are handled gracefully |
+| Deployment | Whether frontend requests reach the intended backend |
+
+Record evaluation results from actual test runs. Do not treat a successful build as proof that live LLM, voice, or deployment integrations are working.
+
+---
+
+## Knowledge Base and Data
+
+The capstone dataset contains company knowledge documents and structured CSV files used by the application's retrieval and customer-support workflows.
+
+The application is intended to use this material for policy answers and supported customer-service operations rather than relying on hardcoded responses.
+
+When modifying or extending the dataset:
+
+- Preserve identifier values and their original formatting.
+- Follow the project's policy-precedence rules.
+- Respect the documented date and business-day calculations.
+- Keep test fixtures separate from live credentials and customer data.
+- Validate retrieval behaviour after knowledge-base changes.
+
+Consult the supplied capstone dataset documentation for the authoritative rules and data definitions.
+
+---
+
+## Project Workflow
+
+The solution follows a staged development approach:
+
+1. **Prompting baseline:** Establish a baseline for LLM-only customer support.
+2. **RAG integration:** Retrieve relevant company documentation and ground responses in evidence.
+3. **Agent workflows:** Add contextual dialogue, verified order lookup, ticket creation, and policy-aware escalation.
+4. **Voice integration:** Connect Gnani.ai STT/TTS to the application.
+5. **Evaluation and deployment:** Test the application, review failures, and deploy the frontend and backend independently.
+
+This staged approach helps isolate the contribution of retrieval, tool use, and voice processing.
+
+---
+
+## Future Improvements
+
+Potential next steps include:
+
+- Expanded automated evaluation across customer-support scenarios.
+- More detailed retrieval relevance and citation-quality metrics.
+- Improved observability for API latency, model errors, and tool failures.
+- Enhanced conversation-state management and session recovery.
+- Broader accessibility and multilingual interaction testing.
+- Automated deployment checks and integration tests against staging services.
+
+## Author
+
+**Debosmita Mukhopadhyay**  
+B.Tech, Computer Science and Engineering — AI/ML
+
+Project: ZentroMart AI Voice Assistant — VoiceOps 2026
+
+- GitHub: [@debosmita-12](https://github.com/debosmita-12)
+- Repository: [ZentroMart_AI_Voice_Assistant](https://github.com/debosmita-12/ZentroMart_AI_Voice_Assistant)
+
+## Acknowledgements
+
+Developed as part of **VoiceOps 2026**, associated with the Consulting & Analytics Club, IIT Guwahati, in collaboration with **Gnani.ai**.
+
+## 📄 License
+
+Refer to the repository's license file for the applicable terms of use.
+
+---
+
+<p align="center">
+  <strong>ZentroMart AI — Smarter Support. Grounded Answers. Meaningful Conversations.</strong>
+</p>

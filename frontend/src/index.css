@@ -5,16 +5,21 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #000000;
-  color: #ffffff;
+  background-color: #F8F5FF;
+  color: #241A35;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow-x: hidden;
+  background-image: 
+    radial-gradient(at 15% 15%, rgba(196, 181, 253, 0.28) 0px, transparent 45%),
+    radial-gradient(at 85% 10%, rgba(184, 161, 227, 0.22) 0px, transparent 50%),
+    radial-gradient(at 50% 85%, rgba(240, 233, 255, 0.7) 0px, transparent 60%);
+  background-attachment: fixed;
 }
 
 /* Custom Serif font class */
@@ -22,16 +27,23 @@ body {
   font-family: 'Instrument Serif', Georgia, serif;
 }
 
-/* Liquid Glass specification strictly matching 'Cinematic Sites in Ten Minutes' */
-.liquid-glass {
-  background: rgba(255, 255, 255, 0.02);
-  background-blend-mode: luminosity;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: none;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12), 0 4px 20px rgba(0, 0, 0, 0.4);
+/* Refined Lavender Frosted Glass (Liquid Glass in Lilac palette) */
+.lavender-glass {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(184, 161, 227, 0.35);
+  box-shadow: 0 10px 30px -10px rgba(109, 76, 195, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
   position: relative;
-  overflow: hidden;
+}
+
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(184, 161, 227, 0.35);
+  box-shadow: 0 10px 30px -10px rgba(109, 76, 195, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  position: relative;
 }
 
 .liquid-glass::before {
@@ -39,15 +51,13 @@ body {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1.4px;
+  padding: 1.2px;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(255, 255, 255, 0.15) 20%,
-    rgba(255, 255, 255, 0) 40%,
-    rgba(255, 255, 255, 0) 60%,
-    rgba(255, 255, 255, 0.15) 80%,
-    rgba(255, 255, 255, 0.45) 100%
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(196, 181, 253, 0.35) 40%,
+    rgba(184, 161, 227, 0.15) 70%,
+    rgba(255, 255, 255, 0.6) 100%
   );
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
@@ -57,26 +67,132 @@ body {
   pointer-events: none;
 }
 
-/* Subtle glass hover states */
 .liquid-glass-interactive {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .liquid-glass-interactive:hover {
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2), 0 6px 24px rgba(0, 0, 0, 0.5);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(184, 161, 227, 0.55);
+  box-shadow: 0 14px 34px -8px rgba(109, 76, 195, 0.16), inset 0 1px 2px rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
 }
 .liquid-glass-interactive:active {
   transform: translateY(0);
 }
 
+/* Architectural subtle perspective grid */
+.architectural-grid {
+  background-size: 54px 54px;
+  background-image: 
+    linear-gradient(to right, rgba(216, 199, 255, 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(216, 199, 255, 0.22) 1px, transparent 1px);
+  mask-image: radial-gradient(ellipse at 50% 50%, black 25%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 25%, transparent 75%);
+}
+
+/* Central Frosted Glass Hero Panel */
+.hero-glass-panel {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 32px 64px -16px rgba(109, 76, 195, 0.18),
+    0 0 0 1px rgba(216, 199, 255, 0.45) inset,
+    0 1px 3px 0 rgba(255, 255, 255, 0.9) inset;
+  position: relative;
+}
+
+/* Sculptural 3D floating slabs */
+.sculptural-slab {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(238, 231, 255, 0.5) 50%, rgba(216, 199, 255, 0.35) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    0 24px 48px -12px rgba(109, 76, 195, 0.16),
+    0 0 0 1px rgba(216, 199, 255, 0.4) inset,
+    0 2px 4px rgba(255, 255, 255, 0.9) inset;
+}
+
+/* Sculptural orb / sphere with radial specular lighting */
+.sculptural-orb {
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95) 0%, rgba(238, 231, 255, 0.8) 35%, rgba(184, 161, 227, 0.6) 70%, rgba(109, 76, 195, 0.4) 100%);
+  box-shadow: 
+    0 20px 40px -10px rgba(109, 76, 195, 0.22),
+    0 0 25px 5px rgba(216, 199, 255, 0.45),
+    inset -4px -4px 12px rgba(109, 76, 195, 0.25),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.9);
+}
+
+/* Floating Animations */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(1.2deg);
+  }
+}
+
+@keyframes floatReverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(16px) rotate(-1.5deg);
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.02);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 7s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 8.5s ease-in-out infinite;
+}
+
+.animate-float-gentle {
+  animation: floatGentle 6s ease-in-out infinite;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-float-reverse,
+  .animate-float-gentle,
+  .animate-soft-glow,
+  .animate-wave-bar {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
 /* Audio wave pulse animation */
 @keyframes wavePulse {
   0%, 100% { height: 6px; }
-  50% { height: 24px; }
+  50% { height: 26px; }
 }
 .animate-wave-bar {
   animation: wavePulse 1.2s ease-in-out infinite;
+}
+
+/* Subtle glowing pulse */
+@keyframes softGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+.animate-soft-glow {
+  animation: softGlow 4s ease-in-out infinite;
 }
 
 /* Custom scrollbar */
@@ -85,12 +201,12 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #000000;
+  background: #F0E9FF;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: #C4B5FD;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #B8A1E3;
 }

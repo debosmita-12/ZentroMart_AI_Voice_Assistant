@@ -10,7 +10,7 @@ An evidence-grounded, multi-turn AI Customer Support Voice Assistant for **Zentr
 
 The project marries two rigorous objectives:
 1. **IIT Guwahati VoiceOps 2026 Capstone Requirements:** All four progressive engineering stages, dataset-backed business logic, policy precedence enforcement, caller identity gating, official tool execution (`lookup_order`, `create_ticket`), Gnani speech integration (`gnani-vachana` SDK), batch audio CLI runner, automated evaluations, and reproducible outputs.
-2. **Cinematic UI/UX Fidelity:** Visually modeled on the reference design in *Cinematic Sites in Ten Minutes*, featuring a full-screen looping cinematic video background (`hero-loop.mp4`), floating liquid-glass navigation with 1.4px gradient pseudo-borders, Instrument Serif typography, minimal black-and-white palette, and an interactive support console.
+2. **Cinematic Lavender UI/UX:** A dedicated AI product landing page and interactive support console featuring a light lilac/lavender palette (`#F8F5FF`, `#C4B5FD`, `#6D4CC3`), subtle looping background video, liquid-glass frosted components, high-contrast dark purple typography, responsive layout, and prominent credit: **Made by — Debosmita**.
 
 ---
 
@@ -270,21 +270,22 @@ python src/evaluation/eval_conversations.py
 ---
 
 ## 🧪 Test Suite
-
-Run the 18 automated unit and integration tests using PyTest:
+ 
+Run the 46 automated unit, integration, and voice conversation regression tests using PyTest:
 
 ```bash
 python -m pytest tests/
 ```
 Output:
 ```text
-tests/test_api.py ...                                                    [ 16%]
-tests/test_conversational_agent.py ...                                   [ 33%]
-tests/test_dataset.py ...                                                [ 50%]
-tests/test_date_utils.py ....                                            [ 72%]
-tests/test_rag.py ...                                                    [ 88%]
-tests/test_voice.py ..                                                   [100%]
-======================= 18 passed in 4.86s ========================
+tests/test_api.py ...                                                    [  6%]
+tests/test_conversational_agent.py ...                                   [ 13%]
+tests/test_dataset.py ...                                                [ 19%]
+tests/test_date_utils.py ....                                            [ 28%]
+tests/test_rag.py ...                                                    [ 34%]
+tests/test_voice.py ..                                                   [ 39%]
+tests/test_voice_conversation_flow.py ............................       [100%]
+======================= 46 passed in 7.43s ========================
 ```
 
 ---
@@ -300,6 +301,7 @@ tests/test_voice.py ..                                                   [100%]
 
 ## 📦 Deliverables & Submission ZIP
 
+- **Made by — Debosmita** (IIT Guwahati × Gnani.ai VoiceOps 2026)
 - **Public GitHub Repo:** [https://github.com/debosmita-12/ZentroMart_AI_Voice_Assistant](https://github.com/debosmita-12/ZentroMart_AI_Voice_Assistant)
 - **4-Page Report:** [`report.pdf`](report.pdf)
 - **Demo Script (120s):** [`demo_script.md`](demo_script.md)

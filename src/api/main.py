@@ -112,6 +112,7 @@ def handle_chat(req: ChatRequest):
         conversation_id=cid,
         customer_message=req.message,
         current_turn=turn,
+        language=req.language,
     )
     
     # Retrieve evidence details for the drawer
@@ -150,8 +151,13 @@ async def handle_voice_upload(
         shutil.copyfileobj(audio.file, f)
 
     try:
-        # 1. Gnani STT
-        stt_res = voice_service.transcribe(temp_in, language_code=language)
+        # 1. Gnani STT with unified language selection
+        stt_lang = language or "en-IN"
+        if stt_lang == "auto":
+            session = conv_agent.sessions.get(cid)
+            stt_lang = session.language if (session and session.language != "auto") else "en-IN"
+
+        stt_res = voice_service.transcribe(temp_in, language_code=stt_lang)
         if not stt_res.get("success"):
             return {
                 "success": False,
@@ -160,24 +166,31 @@ async def handle_voice_upload(
                 "transcript": "",
                 "reply": "",
                 "conversation_id": cid,
+                "can_retry": True,
             }
 
         transcript = stt_res.get("transcript", "").strip()
         if not transcript:
-            reply = "Sorry, I didn't catch that. Could you say it again?"
+            reply = "I didn't catch that clearly. Could you please speak a little closer to your microphone or repeat your order details?"
             agent_res = {
                 "reply": reply,
                 "decision": "clarify",
                 "evidence_used": [],
                 "tool_call": None,
                 "verified": False,
+                "state": "WAITING_FOR_CUSTOMER_REQUEST",
+                "language": stt_lang,
             }
         else:
-            # 2. Process through Step 3 Conversational Agent
-            agent_res = conv_agent.process_turn(cid, transcript, current_turn=turn)
+            # 2. Process through Step 3 Conversational Agent with language policy
+            agent_res = conv_agent.process_turn(cid, transcript, current_turn=turn, language=language)
             reply = agent_res.get("reply", "")
 
-        # 3. Gnani TTS
+        # 3. Gnani TTS with matched response language
+        resolved_tts_lang = agent_res.get("language") or language or "en-IN"
+        if resolved_tts_lang == "auto":
+            resolved_tts_lang = "en-IN"
+
         out_audio_filename = f"reply_{uuid.uuid4().hex[:8]}.wav"
         out_audio_path = AUDIO_DIR / out_audio_filename
         tts_res = voice_service.synthesize(
@@ -185,10 +198,24 @@ async def handle_voice_upload(
             output_file=out_audio_path,
             voice="Kaveri",
             model="timbre-v2.5",
-            language=language,
+            language=resolved_tts_lang,
         )
 
         audio_url = f"/static/audio/{out_audio_filename}" if tts_res.get("success") else None
+
+        # Retrieve evidence details for the drawer
+        detailed_evidence = []
+        for sec_id in agent_res.get("evidence_used", []):
+            chunk = retriever.chunks_by_id.get(sec_id)
+            if chunk:
+                detailed_evidence.append({
+                    "section_id": chunk.section_id,
+                    "title": chunk.section_title,
+                    "doc_name": chunk.doc_name,
+                    "doc_type": chunk.doc_type,
+                    "status": chunk.status,
+                    "content_preview": chunk.content[:150] + "...",
+                })
 
         return {
             "success": True,
@@ -201,9 +228,14 @@ async def handle_voice_upload(
             "tts_error": tts_res.get("error"),
             "decision": agent_res.get("decision"),
             "evidence_used": agent_res.get("evidence_used", []),
+            "detailed_evidence": detailed_evidence,
             "tool_call": agent_res.get("tool_call"),
             "verified": agent_res.get("verified", False),
+            "verification_required": agent_res.get("verification_required", False),
+            "order_id": agent_res.get("order_id"),
             "ticket": agent_res.get("ticket"),
+            "state": agent_res.get("state"),
+            "language": resolved_tts_lang,
         }
 
     finally:

@@ -16,6 +16,10 @@ import {
   Play,
   Pause,
   Sparkles,
+  RotateCcw,
+  Headphones,
+  CheckCircle2,
+  Wrench,
 } from "lucide-react";
 import { ChatMessage, BackendHealth } from "../types";
 
@@ -25,7 +29,10 @@ interface SupportWorkspaceProps {
   onClearInitialPrompt?: () => void;
 }
 
+type InteractionState = "ready" | "listening" | "transcribing" | "thinking" | "speaking";
+
 const INDIAN_LANGUAGES = [
+  { code: "auto", label: "Auto Detect (Match Customer)" },
   { code: "en-IN", label: "English (India)" },
   { code: "hi-IN", label: "Hindi (हिंदी)" },
   { code: "hi-en", label: "Hinglish (Mixed Hindi-English)" },
@@ -66,30 +73,38 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
   ]);
 
   const [inputVal, setInputVal] = useState("");
-  const [selectedLang, setSelectedLang] = useState("en-IN");
-  const [isRecording, setIsRecording] = useState(false);
+  const [selectedLang, setSelectedLang] = useState("auto");
+  const [interactionState, setInteractionState] = useState<InteractionState>("ready");
   const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [conversationId, setConversationId] = useState(
     () => `conv_${Math.random().toString(36).substring(2, 9)}`
   );
   const [verifiedCaller, setVerifiedCaller] = useState<string | null>(null);
+  const [verificationRequired, setVerificationRequired] = useState(false);
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const [activeTicket, setActiveTicket] = useState<string | null>(null);
   const [activeAudioPlaying, setActiveAudioPlaying] = useState<string | null>(null);
   const [expandedEvidence, setExpandedEvidence] = useState<{ [id: string]: boolean }>({});
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
+  const [lastVoiceTranscript, setLastVoiceTranscript] = useState<string | null>(null);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<any>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isSubmittingRef = useRef(false);
 
-  // Auto-scroll on new messages
+  // Auto-scroll container strictly on new messages (avoiding document scroll-jump on recording/state changes)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isProcessing]);
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [messages.length]);
 
   // Handle incoming initial prompt from Hero
   useEffect(() => {
@@ -100,8 +115,9 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
   }, [initialPrompt]);
 
   const handleSendText = async (textToSend: string) => {
-    if (!textToSend.trim() || isProcessing) return;
+    if (!textToSend.trim() || isSubmittingRef.current || interactionState !== "ready") return;
 
+    isSubmittingRef.current = true;
     const userMsg: ChatMessage = {
       id: `user_${Date.now()}`,
       sender: "customer",
@@ -111,7 +127,7 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
 
     setMessages((prev) => [...prev, userMsg]);
     setInputVal("");
-    setIsProcessing(true);
+    setInteractionState("thinking");
 
     try {
       const res = await fetch("/api/chat", {
@@ -125,12 +141,20 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
         }),
       });
 
-      if (!res.ok) throw new Error("Server error");
+      if (!res.ok) throw new Error("Server communication error");
       const data = await res.json();
 
+      if (data.conversation_id && data.conversation_id !== conversationId) {
+        setConversationId(data.conversation_id);
+      }
+      if (data.order_id) setActiveOrderId(data.order_id);
       if (data.verified) {
         setVerifiedCaller(data.order_id || "Verified");
+        setVerificationRequired(false);
+      } else if (data.verification_required) {
+        setVerificationRequired(true);
       }
+
       if (data.ticket && data.ticket.created) {
         setActiveTicket(data.ticket.ticket_id);
       }
@@ -155,50 +179,74 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
         {
           id: `bot_err_${Date.now()}`,
           sender: "assistant",
-          text: "I experienced a brief connection interruption. Please retry your message or reach out to our team.",
+          text: "I experienced a temporary connection interruption. Please retry your message or reach out to our team.",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
     } finally {
-      setIsProcessing(false);
+      setInteractionState("ready");
+      isSubmittingRef.current = false;
     }
   };
 
-  // Recording controls
+  // Recording controls with true browser container detection and duplicate prevention
   const startRecording = async () => {
+    if (interactionState !== "ready" || isSubmittingRef.current) return;
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
-      const recorder = new MediaRecorder(stream);
+
+      let mimeType = "audio/webm";
+      if (typeof MediaRecorder !== "undefined") {
+        if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+          mimeType = "audio/webm;codecs=opus";
+        } else if (MediaRecorder.isTypeSupported("audio/webm")) {
+          mimeType = "audio/webm";
+        } else if (MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")) {
+          mimeType = "audio/ogg;codecs=opus";
+        } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+          mimeType = "audio/mp4";
+        }
+      }
+
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
 
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
 
       recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+        const actualType = recorder.mimeType || mimeType;
+        const extension = actualType.includes("ogg")
+          ? "ogg"
+          : actualType.includes("mp4")
+          ? "mp4"
+          : "webm";
+        const audioBlob = new Blob(audioChunksRef.current, { type: actualType });
         stream.getTracks().forEach((track) => track.stop());
-        await processAudioPayload(audioBlob, "recording.wav");
+        await processAudioPayload(audioBlob, `browser_recording.${extension}`);
       };
 
       recorder.start();
       mediaRecorderRef.current = recorder;
-      setIsRecording(true);
+      setInteractionState("listening");
       setRecordingSeconds(0);
 
       timerRef.current = setInterval(() => {
         setRecordingSeconds((prev) => prev + 1);
       }, 1000);
     } catch (err) {
-      setVoiceNotice("Microphone permission denied or device not supported.");
+      setVoiceNotice("Microphone permission was denied or audio device is unavailable.");
+      setInteractionState("ready");
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && interactionState === "listening") {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
       clearInterval(timerRef.current);
+      setInteractionState("transcribing");
     }
   };
 
@@ -211,7 +259,9 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
   };
 
   const processAudioPayload = async (blob: Blob, filename: string) => {
-    setIsProcessing(true);
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setInteractionState("transcribing");
     setVoiceNotice(null);
 
     const formData = new FormData();
@@ -228,12 +278,21 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
       const data = await res.json();
 
       if (!data.success) {
-        setVoiceNotice(data.error || "Gnani Voice API key not configured on backend.");
+        setVoiceNotice(data.error || "Gnani Voice service did not return a valid transcription.");
+        setInteractionState("ready");
+        isSubmittingRef.current = false;
         return;
       }
 
-      // Add user transcribed message
+      setInteractionState("thinking");
+
+      if (data.conversation_id && data.conversation_id !== conversationId) {
+        setConversationId(data.conversation_id);
+      }
+
+      // Add user transcribed message if detected
       if (data.transcript) {
+        setLastVoiceTranscript(data.transcript);
         setMessages((prev) => [
           ...prev,
           {
@@ -245,9 +304,14 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
         ]);
       }
 
+      if (data.order_id) setActiveOrderId(data.order_id);
       if (data.verified) {
-        setVerifiedCaller(data.conversation_id);
+        setVerifiedCaller(data.order_id || "Verified");
+        setVerificationRequired(false);
+      } else if (data.verification_required) {
+        setVerificationRequired(true);
       }
+
       if (data.ticket && data.ticket.created) {
         setActiveTicket(data.ticket.ticket_id);
       }
@@ -260,6 +324,7 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         decision: data.decision,
         evidence_used: data.evidence_used || [],
+        detailed_evidence: data.detailed_evidence || [],
         tool_call: data.tool_call,
         audio_url: data.audio_url,
         verified: data.verified,
@@ -271,20 +336,29 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
       // Auto-play audio if generated
       if (data.audio_url) {
         playAudio(data.audio_url);
+      } else {
+        setInteractionState("ready");
       }
     } catch (err: any) {
-      setVoiceNotice("Failed to send audio to backend voice service.");
+      setVoiceNotice("Network error communicating with backend voice endpoint.");
+      setInteractionState("ready");
     } finally {
-      setIsProcessing(false);
+      isSubmittingRef.current = false;
     }
   };
 
   const playAudio = (url: string) => {
     if (audioPlayerRef.current) {
+      setInteractionState("speaking");
       audioPlayerRef.current.src = url;
-      audioPlayerRef.current.play();
+      audioPlayerRef.current.play().catch(() => {
+        setInteractionState("ready");
+      });
       setActiveAudioPlaying(url);
-      audioPlayerRef.current.onended = () => setActiveAudioPlaying(null);
+      audioPlayerRef.current.onended = () => {
+        setActiveAudioPlaying(null);
+        setInteractionState("ready");
+      };
     }
   };
 
@@ -300,7 +374,12 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
     const newId = `conv_${Math.random().toString(36).substring(2, 9)}`;
     setConversationId(newId);
     setVerifiedCaller(null);
+    setVerificationRequired(false);
+    setActiveOrderId(null);
     setActiveTicket(null);
+    setLastVoiceTranscript(null);
+    setVoiceNotice(null);
+    setInteractionState("ready");
     setMessages([
       {
         id: "init_fresh",
@@ -330,40 +409,85 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
         className="hidden"
       />
 
-      {/* Workspace Container with Liquid-Glass Treatment */}
-      <div className="liquid-glass rounded-3xl p-5 sm:p-8 flex flex-col border border-white/10 shadow-2xl">
+      {/* Section Header: Launch Assistant Intro */}
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lavender-200 text-lavender-800 text-xs font-semibold uppercase tracking-wider mb-3">
+          Interactive Console
+        </div>
+        <h2 className="font-serif text-3xl sm:text-4xl text-headingtext tracking-tight mb-2">
+          Experience <span className="italic font-normal text-lavender-700">ZentroMart Support.</span>
+        </h2>
+        <p className="text-bodytext text-sm max-w-md mx-auto">
+          Type queries or speak into your microphone with live RAG grounding, identity verification gating, and Gnani speech synthesis.
+        </p>
+      </div>
+
+      {/* Workspace Container with Organic Glass Styling */}
+      <div className="hero-glass-panel rounded-[2.5rem] p-6 sm:p-10 flex flex-col border border-lavender-300/80 shadow-heroPanel bg-white/95">
         {/* Header Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-white/10">
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-lavender-200/90">
           <div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <h2 className="text-white font-medium text-lg tracking-tight">
+              <span className="w-2.5 h-2.5 rounded-full bg-status-green animate-pulse" />
+              <h3 className="text-headingtext font-semibold text-lg tracking-tight">
                 ZentroMart Support Console
-              </h2>
+              </h3>
             </div>
-            <p className="text-white/50 text-xs mt-1">
-              Ref Date: <span className="text-white/80">20 Oct 2026</span> • Mon-Sat Business Days • Calendar Return Windows
+            <p className="text-bodytext text-xs mt-1">
+              Ref Date: <span className="font-medium text-headingtext">20 Oct 2026</span> • Mon-Sat Business Days • Calendar Return Windows
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Live Interactive State Indicator */}
+            <div
+              className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-sm border ${
+                interactionState === "listening"
+                  ? "bg-rose-100 text-rose-800 border-rose-300 animate-pulse"
+                  : interactionState === "transcribing"
+                  ? "bg-lavender-200 text-lavender-900 border-lavender-300 animate-pulse"
+                  : interactionState === "thinking"
+                  ? "bg-amber-100 text-amber-800 border-amber-300 animate-pulse"
+                  : interactionState === "speaking"
+                  ? "bg-status-greenLight text-status-green border-status-greenBorder animate-pulse"
+                  : "bg-white text-bodytext border-lavender-300"
+              }`}
+            >
+              {interactionState === "listening" && <Mic className="w-3.5 h-3.5 text-rose-600" />}
+              {interactionState === "transcribing" && <Headphones className="w-3.5 h-3.5 text-lavender-700" />}
+              {interactionState === "thinking" && <Sparkles className="w-3.5 h-3.5 text-amber-600" />}
+              {interactionState === "speaking" && <Volume2 className="w-3.5 h-3.5 text-status-green" />}
+              {interactionState === "ready" && <CheckCircle2 className="w-3.5 h-3.5 text-status-green" />}
+              <span className="capitalize font-semibold">
+                {interactionState === "listening"
+                  ? `Listening (${recordingSeconds}s)`
+                  : interactionState === "transcribing"
+                  ? "Transcribing (Gnani)"
+                  : interactionState === "thinking"
+                  ? "Thinking..."
+                  : interactionState === "speaking"
+                  ? "Speaking (Gnani TTS)"
+                  : "Ready"}
+              </span>
+            </div>
+
             {/* Verification State Pill */}
             {verifiedCaller ? (
-              <div className="px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-1.5">
+              <div className="px-3 py-1 rounded-full bg-status-greenLight border border-status-greenBorder text-status-green text-xs font-medium flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Caller Verified</span>
+                <span>Verified: {verifiedCaller}</span>
               </div>
             ) : (
-              <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 text-xs flex items-center gap-1.5">
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+              <div className="px-3 py-1 rounded-full bg-lavender-100 border border-lavender-300 text-lavender-800 text-xs font-medium flex items-center gap-1.5">
+                <ShieldAlert className="w-3.5 h-3.5 text-lavender-700" />
                 <span>Verification Gated</span>
               </div>
             )}
 
             {/* Ticket Badge */}
             {activeTicket && (
-              <div className="px-3 py-1 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 text-xs flex items-center gap-1.5">
-                <Ticket className="w-3.5 h-3.5" />
+              <div className="px-3 py-1 rounded-full bg-lavender-200 border border-lavender-400 text-lavender-900 text-xs font-mono font-medium flex items-center gap-1.5">
+                <Ticket className="w-3.5 h-3.5 text-lavender-700" />
                 <span>{activeTicket.substring(0, 10)}...</span>
               </div>
             )}
@@ -372,10 +496,10 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
             <select
               value={selectedLang}
               onChange={(e) => setSelectedLang(e.target.value)}
-              className="bg-black/60 border border-white/15 text-white/90 text-xs rounded-full px-3 py-1.5 focus:outline-none hover:border-white/30 transition-colors"
+              className="bg-white border border-lavender-300 text-headingtext text-xs rounded-full px-3 py-1.5 focus:outline-none focus:border-lavender-500 shadow-sm transition-colors cursor-pointer"
             >
               {INDIAN_LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code} className="bg-neutral-900 text-white">
+                <option key={l.code} value={l.code} className="bg-white text-headingtext">
                   {l.label}
                 </option>
               ))}
@@ -385,23 +509,58 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
             <button
               onClick={handleResetSession}
               title="Reset conversation"
-              className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer"
+              className="w-8 h-8 rounded-full bg-white hover:bg-lavender-100 border border-lavender-300 flex items-center justify-center text-bodytext hover:text-lavender-800 transition-all cursor-pointer shadow-sm"
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* Voice Warning / Notice Banner if needed */}
+        {/* Verification Required Alert Prompt */}
+        {verificationRequired && !verifiedCaller && (
+          <div className="mt-4 p-3.5 rounded-2xl bg-lavender-100/90 border border-lavender-300 flex items-center justify-between gap-3 text-xs text-lavender-950 shadow-sm animate-in fade-in duration-200">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-lavender-700 flex-shrink-0" />
+              <span>
+                <strong>Caller Verification Needed:</strong> Please speak or type the last 4 digits of your registered phone number or delivery pincode to unlock order details.
+              </span>
+            </div>
+            {activeOrderId && (
+              <span className="font-mono text-[11px] font-bold bg-white px-2 py-0.5 rounded border border-lavender-300">
+                Order: {activeOrderId}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Voice Warning / Notice Banner with Retry Action */}
         {voiceNotice && (
-          <div className="mt-4 p-3 rounded-xl bg-amber-950/50 border border-amber-500/30 flex items-center gap-2 text-xs text-amber-200">
-            <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-            <span>{voiceNotice}</span>
+          <div className="mt-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-300 flex items-center justify-between gap-3 text-xs text-amber-900 shadow-sm">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <span>{voiceNotice}</span>
+            </div>
+            <button
+              onClick={startRecording}
+              className="px-3 py-1 rounded-full bg-amber-200 hover:bg-amber-300 text-amber-900 font-medium text-xs flex items-center gap-1 transition-all cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Retry Voice</span>
+            </button>
+          </div>
+        )}
+
+        {/* Last Understood Voice Transcript Indicator */}
+        {lastVoiceTranscript && (
+          <div className="mt-3 px-3.5 py-1.5 rounded-xl bg-white border border-lavender-200 flex items-center gap-2 text-xs text-bodytext shadow-sm w-fit">
+            <Mic className="w-3.5 h-3.5 text-lavender-700" />
+            <span>Understood from voice:</span>
+            <span className="font-medium text-headingtext">"{lastVoiceTranscript}"</span>
           </div>
         )}
 
         {/* Conversation Thread */}
-        <div className="my-6 min-h-[380px] max-h-[500px] overflow-y-auto pr-2 space-y-4">
+        <div ref={messagesContainerRef} className="my-6 min-h-[380px] max-h-[500px] overflow-y-auto pr-2 space-y-4">
           {messages.map((msg) => {
             const isUser = msg.sender === "customer";
             const isExp = expandedEvidence[msg.id];
@@ -414,25 +573,25 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
                 <div
                   className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed ${
                     isUser
-                      ? "bg-white text-black font-normal rounded-tr-sm"
-                      : "liquid-glass text-white/95 border border-white/10 rounded-tl-sm"
+                      ? "bg-lavender-700 text-white font-normal rounded-tr-sm shadow-sm"
+                      : "bg-white text-headingtext border border-lavender-200/90 rounded-tl-sm shadow-sm"
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.text}</p>
 
                   {/* Assistant Extra Metadata: Audio player, tools, evidence */}
                   {!isUser && (
-                    <div className="mt-3 pt-2.5 border-t border-white/10 flex flex-wrap items-center gap-2 text-xs">
+                    <div className="mt-3 pt-2.5 border-t border-lavender-200/80 flex flex-wrap items-center gap-2 text-xs">
                       {/* Audio playback button */}
                       {msg.audio_url && (
                         <button
                           onClick={() => playAudio(msg.audio_url!)}
-                          className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center gap-1.5 transition-all cursor-pointer"
+                          className="px-2.5 py-1 rounded-full bg-lavender-100 hover:bg-lavender-200 text-lavender-800 border border-lavender-200 flex items-center gap-1.5 transition-all cursor-pointer font-medium"
                         >
                           {activeAudioPlaying === msg.audio_url ? (
-                            <Pause className="w-3 h-3 text-emerald-400" />
+                            <Pause className="w-3 h-3 text-lavender-700" />
                           ) : (
-                            <Play className="w-3 h-3 text-emerald-400" />
+                            <Play className="w-3 h-3 text-lavender-700" />
                           )}
                           <span>Listen (Gnani TTS)</span>
                         </button>
@@ -440,8 +599,9 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
 
                       {/* Tool Call Tag */}
                       {msg.tool_call && (
-                        <span className="px-2.5 py-1 rounded-full bg-sky-950/70 border border-sky-500/30 text-sky-300 font-mono text-[11px]">
-                          ⚡ {msg.tool_call}
+                        <span className="px-2.5 py-1 rounded-full bg-lavender-200 border border-lavender-300 text-lavender-900 font-mono text-[11px] font-medium flex items-center gap-1.5">
+                          <Wrench className="w-3 h-3 text-lavender-700 flex-shrink-0" />
+                          <span>{msg.tool_call}</span>
                         </span>
                       )}
 
@@ -449,9 +609,9 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
                       {msg.evidence_used && msg.evidence_used.length > 0 && (
                         <button
                           onClick={() => toggleEvidence(msg.id)}
-                          className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 flex items-center gap-1 transition-all cursor-pointer"
+                          className="px-2.5 py-1 rounded-full bg-lavender-100 hover:bg-lavender-200 border border-lavender-300 text-lavender-800 flex items-center gap-1 transition-all cursor-pointer font-medium"
                         >
-                          <FileText className="w-3 h-3 text-emerald-400" />
+                          <FileText className="w-3 h-3 text-lavender-700" />
                           <span>
                             Evidence: {msg.evidence_used.join(", ")}
                           </span>
@@ -468,66 +628,75 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
 
                 {/* Expanded Evidence Drawer for this message */}
                 {!isUser && isExp && msg.detailed_evidence && (
-                  <div className="mt-2 max-w-[85%] sm:max-w-[75%] p-3.5 rounded-xl bg-black/60 border border-white/10 text-xs text-white/80 space-y-2 animate-in fade-in duration-200">
-                    <p className="font-semibold text-emerald-400 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5" />
+                  <div className="mt-2 max-w-[85%] sm:max-w-[75%] p-3.5 rounded-xl bg-lavender-50 border border-lavender-300 text-xs text-bodytext space-y-2 animate-in fade-in duration-200 shadow-sm">
+                    <p className="font-semibold text-lavender-800 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-lavender-700" />
                       Grounded Official Passages:
                     </p>
                     {msg.detailed_evidence.map((ev, i) => (
-                      <div key={i} className="p-2 rounded bg-white/5 border border-white/5">
-                        <div className="flex items-center justify-between font-mono text-[11px] text-white/60 mb-1">
-                          <span className="text-white/90 font-bold">[{ev.section_id}] {ev.title}</span>
-                          <span>{ev.doc_name}</span>
+                      <div key={i} className="p-2.5 rounded-lg bg-white border border-lavender-200">
+                        <div className="flex items-center justify-between font-mono text-[11px] text-bodytext mb-1">
+                          <span className="text-lavender-800 font-bold">[{ev.section_id}] {ev.title}</span>
+                          <span className="text-bodytext/70">{ev.doc_name}</span>
                         </div>
-                        <p className="text-white/70 line-clamp-3">{ev.content_preview}</p>
+                        <p className="text-bodytext text-xs leading-relaxed">{ev.content_preview}</p>
                       </div>
                     ))}
                   </div>
                 )}
 
-                <span className="text-[10px] text-white/40 mt-1 px-1">{msg.timestamp}</span>
+                <span className="text-[10px] text-bodytext/60 mt-1 px-1">{msg.timestamp}</span>
               </div>
             );
           })}
 
           {/* Typing / Processing indicator */}
-          {isProcessing && (
-            <div className="flex items-center gap-2 text-xs text-white/60 liquid-glass px-4 py-2.5 rounded-full w-fit">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          {interactionState === "thinking" && (
+            <div className="flex items-center gap-2 text-xs text-lavender-800 bg-lavender-100 border border-lavender-300 px-4 py-2.5 rounded-full w-fit shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-lavender-700 animate-ping" />
               <span>ZentroMart AI is checking documents & tools...</span>
             </div>
           )}
 
-          <div ref={messagesEndRef} />
+          {interactionState === "transcribing" && (
+            <div className="flex items-center gap-2 text-xs text-lavender-800 bg-lavender-100 border border-lavender-300 px-4 py-2.5 rounded-full w-fit shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-lavender-700 animate-ping" />
+              <span>Transcribing speech with Gnani STT...</span>
+            </div>
+          )}
+
+          <div className="h-2" />
         </div>
 
         {/* Input Bar & Voice Controls */}
-        <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center gap-3">
+        <div className="pt-4 border-t border-lavender-200/90 flex flex-col sm:flex-row items-center gap-3">
           {/* Text Input Form */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSendText(inputVal);
             }}
-            className="w-full flex-1 flex items-center gap-2 bg-black/60 rounded-full border border-white/15 px-4 py-1.5 focus-within:border-white/40 transition-colors"
+            className="w-full flex-1 flex items-center gap-2 bg-white rounded-full border border-lavender-300 px-4 py-1.5 focus-within:border-lavender-500 shadow-sm transition-colors"
           >
             <input
               type="text"
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
               placeholder={
-                isRecording
+                interactionState === "listening"
                   ? `Listening (${recordingSeconds}s)... click mic to stop`
+                  : interactionState !== "ready"
+                  ? "Processing..."
                   : "Type your query (or click mic / upload audio)..."
               }
-              disabled={isRecording}
-              className="bg-transparent text-white placeholder-white/40 text-sm focus:outline-none w-full py-1.5"
+              disabled={interactionState !== "ready"}
+              className="bg-transparent text-headingtext placeholder-bodytext/60 text-sm focus:outline-none w-full py-1.5"
             />
 
             <button
               type="submit"
-              disabled={!inputVal.trim() || isProcessing}
-              className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:bg-white/90 disabled:opacity-40 disabled:hover:bg-white transition-all cursor-pointer flex-shrink-0"
+              disabled={!inputVal.trim() || interactionState !== "ready"}
+              className="w-8 h-8 rounded-full bg-lavender-700 text-white flex items-center justify-center hover:bg-lavender-800 disabled:opacity-40 disabled:hover:bg-lavender-700 transition-all cursor-pointer flex-shrink-0 shadow-sm"
             >
               <Send className="w-3.5 h-3.5" />
             </button>
@@ -538,26 +707,32 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
             {/* Record Mic Button */}
             <button
               type="button"
-              onClick={isRecording ? stopRecording : startRecording}
-              title={isRecording ? "Stop recording" : "Record audio (Gnani STT)"}
-              className={`h-11 px-4 rounded-full flex items-center gap-2 text-xs font-medium transition-all cursor-pointer ${
-                isRecording
-                  ? "bg-red-500/90 text-white animate-pulse"
-                  : "liquid-glass liquid-glass-interactive text-white/90 hover:bg-white/15"
+              onClick={interactionState === "listening" ? stopRecording : startRecording}
+              disabled={interactionState !== "ready" && interactionState !== "listening"}
+              title={interactionState === "listening" ? "Stop recording" : "Record audio (Gnani STT)"}
+              className={`h-11 min-w-[110px] justify-center px-4 rounded-full flex items-center gap-2 text-xs font-medium transition-all cursor-pointer shadow-sm ${
+                interactionState === "listening"
+                  ? "bg-red-500 text-white animate-pulse"
+                  : "bg-white hover:bg-lavender-100 text-headingtext border border-lavender-300"
               }`}
             >
-              {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-emerald-400" />}
-              <span>{isRecording ? `${recordingSeconds}s Stop` : "Record"}</span>
+              {interactionState === "listening" ? (
+                <MicOff className="w-4 h-4" />
+              ) : (
+                <Mic className="w-4 h-4 text-lavender-700" />
+              )}
+              <span>{interactionState === "listening" ? `${recordingSeconds}s Stop` : "Record"}</span>
             </button>
 
             {/* Upload Audio File Button */}
             <button
               type="button"
+              disabled={interactionState !== "ready"}
               onClick={() => fileInputRef.current?.click()}
-              title="Upload customer audio file (.wav, .mp3)"
-              className="h-11 px-3.5 rounded-full liquid-glass liquid-glass-interactive flex items-center gap-1.5 text-xs text-white/80 hover:text-white transition-all cursor-pointer"
+              title="Upload customer audio file (.wav, .mp3, .webm)"
+              className="h-11 px-3.5 rounded-full bg-white hover:bg-lavender-100 text-headingtext border border-lavender-300 flex items-center gap-1.5 text-xs transition-all cursor-pointer shadow-sm disabled:opacity-50"
             >
-              <Upload className="w-3.5 h-3.5" />
+              <Upload className="w-3.5 h-3.5 text-lavender-700" />
               <span className="hidden sm:inline">Upload</span>
             </button>
           </div>

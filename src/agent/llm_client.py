@@ -87,4 +87,4 @@ class LLMClient:
         if fallback_text:
             return fallback_text
 
-        return "I am ZentroMart's AI customer support assistant. How can I assist you with your order today?"
+        return "I apologize, but I am unable to retrieve that information right now. Please repeat your question or let me know if you would like me to connect you with our support team."

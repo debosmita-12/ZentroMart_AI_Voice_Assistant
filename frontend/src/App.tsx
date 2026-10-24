@@ -5,6 +5,7 @@ import { CapabilitiesSection } from "./components/CapabilitiesSection";
 import { HowItWorksSection } from "./components/HowItWorksSection";
 import { SupportWorkspace } from "./components/SupportWorkspace";
 import { DeveloperDrawer } from "./components/DeveloperDrawer";
+import { DeliverablesSection } from "./components/DeliverablesSection";
 import { Footer } from "./components/Footer";
 import { BackendHealth } from "./types";
 
@@ -32,34 +33,37 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="bg-black text-white min-h-screen selection:bg-white/20 selection:text-white">
-      {/* 1. Floating Liquid Glass Navbar */}
+    <div className="bg-lavender-100 text-headingtext min-h-screen selection:bg-lavender-300 selection:text-lavender-900">
+      {/* 1. Floating Lavender Glass Navbar */}
       <Navbar health={health} onOpenWorkspace={handleOpenWorkspace} />
 
-      {/* 2. Full-Screen Cinematic Hero */}
+      {/* 2. Dedicated Cinematic Lavender Landing Page Hero */}
       <Hero
-        onSubmitPrompt={handleSubmitPrompt}
+        health={health}
         onOpenWorkspace={handleOpenWorkspace}
         onStartVoice={handleOpenWorkspace}
       />
 
-      {/* 3. Concise Capabilities Section */}
+      {/* 3. Four Core Capabilities */}
       <CapabilitiesSection />
 
-      {/* 4. Four Steps: How It Works */}
+      {/* 4. Four Steps: How It Works Timeline */}
       <HowItWorksSection />
 
-      {/* 5. Support Workspace (Conversation & Voice Console) */}
+      {/* 5. Launch Assistant & Interactive Support Console */}
       <SupportWorkspace
         health={health}
         initialPrompt={queuedPrompt}
         onClearInitialPrompt={() => setQueuedPrompt("")}
       />
 
-      {/* 6. Developer Drawer / Evaluation Benchmarks */}
+      {/* 6. Evaluation Dashboard & Live Precedence Inspector */}
       <DeveloperDrawer />
 
-      {/* 7. Footer */}
+      {/* 7. Organized Capstone Deliverables Checklist */}
+      <DeliverablesSection />
+
+      {/* 8. Footer with Made by — Debosmita */}
       <Footer />
     </div>
   );

@@ -68,8 +68,36 @@ class GnaniVoiceService:
                 "provider": "gnani",
             }
 
+        converted_obj = None
+        target_file = path_obj
+
+        # Transcode any audio container (WebM, Ogg, MP3, MP4, non-standard WAV)
+        # to standard 16kHz mono 16-bit PCM WAV to prevent Gnani RIFF header errors
         try:
-            res = self._stt_client.transcribe(str(path_obj), language_code=language_code)
+            import subprocess
+            import imageio_ffmpeg
+            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            temp_pcm = path_obj.parent / f"pcm16k_{path_obj.stem}_{os.getpid()}.wav"
+            cmd = [
+                ffmpeg_exe,
+                "-y",
+                "-i", str(path_obj),
+                "-vn",
+                "-ar", "16000",
+                "-ac", "1",
+                "-c:a", "pcm_s16le",
+                str(temp_pcm),
+            ]
+            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if proc.returncode == 0 and temp_pcm.exists():
+                converted_obj = temp_pcm
+                target_file = temp_pcm
+        except Exception:
+            # Fall back to original file if ffmpeg conversion is bypassed
+            target_file = path_obj
+
+        try:
+            res = self._stt_client.transcribe(str(target_file), language_code=language_code)
             transcript = res.get("transcript", "")
             return {
                 "success": True,
@@ -84,6 +112,12 @@ class GnaniVoiceService:
                 "error": f"Gnani STT error: {str(e)}",
                 "provider": "gnani",
             }
+        finally:
+            if converted_obj and converted_obj.exists() and converted_obj != path_obj:
+                try:
+                    converted_obj.unlink()
+                except OSError:
+                    pass
 
     def synthesize(
         self,

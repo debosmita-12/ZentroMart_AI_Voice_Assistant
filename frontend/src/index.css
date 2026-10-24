@@ -6,19 +6,27 @@
 
 :root {
   color-scheme: light;
+  --bg-ivory: #F5F1E9;
+  --bg-sand: #E9E2D7;
+  --text-charcoal: #292621;
+  --text-taupe: #777064;
+  --border-champagne: #DDD3C2;
+  --accent-gold: #C9A77B;
+  --accent-gold-glow: rgba(201, 167, 123, 0.45);
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #F8F5FF;
-  color: #241A35;
+  background-color: #F5F1E9;
+  color: #292621;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow-x: hidden;
+  /* Atmospheric Warm Studio Lighting matching reference image */
   background-image: 
-    radial-gradient(at 15% 15%, rgba(196, 181, 253, 0.28) 0px, transparent 45%),
-    radial-gradient(at 85% 10%, rgba(184, 161, 227, 0.22) 0px, transparent 50%),
-    radial-gradient(at 50% 85%, rgba(240, 233, 255, 0.7) 0px, transparent 60%);
+    radial-gradient(at 20% 12%, rgba(250, 245, 236, 0.95) 0px, transparent 48%),
+    radial-gradient(at 80% 18%, rgba(238, 230, 218, 0.75) 0px, transparent 48%),
+    radial-gradient(at 50% 85%, rgba(230, 222, 210, 0.6) 0px, transparent 60%);
   background-attachment: fixed;
 }
 
@@ -27,36 +35,29 @@ body {
   font-family: 'Instrument Serif', Georgia, serif;
 }
 
-/* Refined Lavender Frosted Glass (Liquid Glass in Lilac palette) */
-.lavender-glass {
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(184, 161, 227, 0.35);
-  box-shadow: 0 10px 30px -10px rgba(109, 76, 195, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
-  position: relative;
-}
-
+/* Refined Warm Frosted Glass (Liquid Glass in Warm Neutral / Champagne palette) */
+.warm-glass,
 .liquid-glass {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(184, 161, 227, 0.35);
-  box-shadow: 0 10px 30px -10px rgba(109, 76, 195, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(226, 217, 204, 0.7);
+  box-shadow: 0 12px 36px -10px rgba(60, 50, 40, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.95);
   position: relative;
 }
 
-.liquid-glass::before {
+.liquid-glass::before,
+.warm-glass::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1.2px;
+  padding: 1px;
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.95) 0%,
-    rgba(196, 181, 253, 0.35) 40%,
-    rgba(184, 161, 227, 0.15) 70%,
+    rgba(216, 206, 194, 0.45) 45%,
+    rgba(201, 167, 123, 0.25) 75%,
     rgba(255, 255, 255, 0.6) 100%
   );
   -webkit-mask:
@@ -71,58 +72,159 @@ body {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .liquid-glass-interactive:hover {
-  background: rgba(255, 255, 255, 0.94);
-  border-color: rgba(184, 161, 227, 0.55);
-  box-shadow: 0 14px 34px -8px rgba(109, 76, 195, 0.16), inset 0 1px 2px rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(201, 167, 123, 0.65);
+  box-shadow: 0 16px 40px -8px rgba(60, 50, 40, 0.12), inset 0 1px 2px rgba(255, 255, 255, 1);
   transform: translateY(-2px);
 }
 .liquid-glass-interactive:active {
   transform: translateY(0);
 }
 
-/* Architectural subtle perspective grid */
+/* Architectural 3D perspective grid matching reference */
 .architectural-grid {
-  background-size: 54px 54px;
+  background-size: 56px 56px;
   background-image: 
-    linear-gradient(to right, rgba(216, 199, 255, 0.22) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(216, 199, 255, 0.22) 1px, transparent 1px);
-  mask-image: radial-gradient(ellipse at 50% 50%, black 25%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 25%, transparent 75%);
+    linear-gradient(to right, rgba(160, 146, 128, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(160, 146, 128, 0.15) 1px, transparent 1px);
+  mask-image: radial-gradient(ellipse at 50% 50%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 30%, transparent 75%);
 }
 
-/* Central Frosted Glass Hero Panel */
+/* Central Frosted Glass Hero Panel matching reference image */
 .hero-glass-panel {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
   border: 1px solid rgba(255, 255, 255, 0.9);
   box-shadow: 
-    0 32px 64px -16px rgba(109, 76, 195, 0.18),
-    0 0 0 1px rgba(216, 199, 255, 0.45) inset,
-    0 1px 3px 0 rgba(255, 255, 255, 0.9) inset;
+    0 32px 64px -16px rgba(60, 50, 40, 0.12),
+    0 0 0 1px rgba(216, 206, 194, 0.45) inset,
+    0 2px 6px 0 rgba(255, 255, 255, 0.95) inset;
   position: relative;
 }
 
-/* Sculptural 3D floating slabs */
-.sculptural-slab {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(238, 231, 255, 0.5) 50%, rgba(216, 199, 255, 0.35) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+/* Sculptural 3D floating glass slabs with gold wave inlays */
+.sculptural-glass-slab {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(245, 241, 233, 0.55) 50%, rgba(233, 226, 215, 0.38) 100%);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.92);
   box-shadow: 
-    0 24px 48px -12px rgba(109, 76, 195, 0.16),
-    0 0 0 1px rgba(216, 199, 255, 0.4) inset,
-    0 2px 4px rgba(255, 255, 255, 0.9) inset;
+    0 24px 48px -12px rgba(60, 50, 40, 0.14),
+    0 0 0 1px rgba(216, 206, 194, 0.5) inset,
+    0 2px 4px rgba(255, 255, 255, 0.95) inset;
+  position: relative;
 }
 
-/* Sculptural orb / sphere with radial specular lighting */
-.sculptural-orb {
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95) 0%, rgba(238, 231, 255, 0.8) 35%, rgba(184, 161, 227, 0.6) 70%, rgba(109, 76, 195, 0.4) 100%);
+/* Tactile Terrazzo / Speckled stone slab matching bottom-left of reference image */
+.sculptural-terrazzo-slab {
+  background-color: #E6DDD0;
+  background-image: 
+    radial-gradient(#7C6D5B 0.9px, transparent 0.9px),
+    radial-gradient(#A39480 0.8px, #E6DDD0 0.8px);
+  background-size: 14px 14px;
+  background-position: 0 0, 7px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow: 
-    0 20px 40px -10px rgba(109, 76, 195, 0.22),
-    0 0 25px 5px rgba(216, 199, 255, 0.45),
-    inset -4px -4px 12px rgba(109, 76, 195, 0.25),
-    inset 2px 2px 6px rgba(255, 255, 255, 0.9);
+    0 26px 50px -12px rgba(60, 50, 40, 0.18),
+    0 0 0 1px rgba(216, 206, 194, 0.6) inset,
+    0 2px 4px rgba(255, 255, 255, 0.9) inset;
+  position: relative;
+}
+
+/* Diagonal ribbed / fluted ivory texture matching bottom-right of reference image */
+.sculptural-ribbed-slab {
+  background-color: #F0EAE1;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.9) 0,
+    rgba(255, 255, 255, 0.9) 3px,
+    transparent 3px,
+    transparent 7px
+  );
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 26px 50px -12px rgba(60, 50, 40, 0.16),
+    0 0 0 1px rgba(216, 206, 194, 0.55) inset,
+    0 2px 4px rgba(255, 255, 255, 0.95) inset;
+  position: relative;
+}
+
+/* Golden Metallic Inlay Wave (The gleaming gold ribbon in reference image) */
+.metallic-gold-ribbon {
+  background: linear-gradient(
+    135deg,
+    #F4E2C7 0%,
+    #D4B483 30%,
+    #C9A77B 55%,
+    #9C7748 85%,
+    #D4B483 100%
+  );
+  box-shadow: 
+    0 2px 6px rgba(120, 90, 50, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+/* Thick architectural metallic gold beam */
+.sculptural-gold-beam {
+  background: linear-gradient(
+    135deg,
+    #FAF3E6 0%,
+    #EAD2AB 20%,
+    #D4B483 45%,
+    #B58F58 75%,
+    #8A6B3D 100%
+  );
+  box-shadow: 
+    0 10px 24px -4px rgba(80, 60, 35, 0.32),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -1.5px 2px rgba(90, 70, 40, 0.4);
+}
+
+/* Ground floor wedge texture */
+.sculptural-floor-wedge {
+  background: linear-gradient(145deg, #E8DFD2 0%, #D8CDBE 100%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 16px 32px -8px rgba(60, 50, 40, 0.15);
+}
+
+/* Smooth blush/sand spheres with realistic studio directional lighting */
+.sculptural-orb {
+  background: radial-gradient(
+    circle at 35% 28%,
+    #FFFFFF 0%,
+    #F6EDE2 32%,
+    #E4D4BF 68%,
+    #B39B81 100%
+  );
+  box-shadow: 
+    0 24px 44px -10px rgba(60, 50, 40, 0.22),
+    0 0 20px 4px rgba(233, 226, 215, 0.45),
+    inset -5px -5px 14px rgba(110, 90, 70, 0.22),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.95);
+}
+
+/* Illuminated Golden Pill Button matching "CTA here" from reference image */
+.glowing-cta-btn {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAF6EE 100%);
+  color: #292621;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 0 32px 6px rgba(201, 167, 123, 0.52),
+    0 12px 28px -6px rgba(60, 50, 40, 0.16),
+    inset 0 1px 1px #FFFFFF;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glowing-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 0 44px 10px rgba(201, 167, 123, 0.72),
+    0 16px 36px -6px rgba(60, 50, 40, 0.22),
+    inset 0 1px 1px #FFFFFF;
+}
+.glowing-cta-btn:active {
+  transform: translateY(0);
 }
 
 /* Floating Animations */
@@ -131,7 +233,7 @@ body {
     transform: translateY(0px) rotate(0deg);
   }
   50% {
-    transform: translateY(-14px) rotate(1.2deg);
+    transform: translateY(-12px) rotate(1deg);
   }
 }
 
@@ -140,7 +242,7 @@ body {
     transform: translateY(0px) rotate(0deg);
   }
   50% {
-    transform: translateY(16px) rotate(-1.5deg);
+    transform: translateY(14px) rotate(-1.2deg);
   }
 }
 
@@ -149,20 +251,38 @@ body {
     transform: translateY(0px) scale(1);
   }
   50% {
-    transform: translateY(-8px) scale(1.02);
+    transform: translateY(-7px) scale(1.015);
   }
 }
 
 .animate-float-slow {
-  animation: floatSlow 7s ease-in-out infinite;
+  animation: floatSlow 7.5s ease-in-out infinite;
 }
 
 .animate-float-reverse {
-  animation: floatReverse 8.5s ease-in-out infinite;
+  animation: floatReverse 9s ease-in-out infinite;
 }
 
 .animate-float-gentle {
-  animation: floatGentle 6s ease-in-out infinite;
+  animation: floatGentle 6.5s ease-in-out infinite;
+}
+
+/* Audio wave pulse animation in champagne tones */
+@keyframes wavePulse {
+  0%, 100% { height: 6px; }
+  50% { height: 26px; }
+}
+.animate-wave-bar {
+  animation: wavePulse 1.2s ease-in-out infinite;
+}
+
+/* Subtle glowing pulse */
+@keyframes softGlow {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.04); }
+}
+.animate-soft-glow {
+  animation: softGlow 4.5s ease-in-out infinite;
 }
 
 /* Respect prefers-reduced-motion */
@@ -177,36 +297,18 @@ body {
   }
 }
 
-/* Audio wave pulse animation */
-@keyframes wavePulse {
-  0%, 100% { height: 6px; }
-  50% { height: 26px; }
-}
-.animate-wave-bar {
-  animation: wavePulse 1.2s ease-in-out infinite;
-}
-
-/* Subtle glowing pulse */
-@keyframes softGlow {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.05); }
-}
-.animate-soft-glow {
-  animation: softGlow 4s ease-in-out infinite;
-}
-
-/* Custom scrollbar */
+/* Custom scrollbar in warm champagne / taupe tones */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F0E9FF;
+  background: #EAE3D6;
 }
 ::-webkit-scrollbar-thumb {
-  background: #C4B5FD;
+  background: #C9A77B;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #B8A1E3;
+  background: #B88E56;
 }

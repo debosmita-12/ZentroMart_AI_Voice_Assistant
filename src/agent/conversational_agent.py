@@ -119,6 +119,13 @@ class ConversationSession:
         self.last_tool_call: Optional[str] = None
 
 
+WELCOME_MESSAGE = (
+    "Hello! Welcome to ZentroMart Customer Care. I am your AI customer support assistant, "
+    "here to help you with your orders, deliveries, returns, refunds, products, and other queries. "
+    "How may I assist you today?"
+)
+
+
 class ConversationalAgent:
     def __init__(
         self,
@@ -140,6 +147,26 @@ class ConversationalAgent:
     def reset_session(self, conversation_id: str):
         if conversation_id in self.sessions:
             del self.sessions[conversation_id]
+
+    def init_session(self, conversation_id: str, language: str = "en-IN") -> Dict[str, Any]:
+        session = self.get_or_create_session(conversation_id)
+        session.greeting_delivered = True
+        session.language = language
+        session.state = ConversationState.WAITING_FOR_CUSTOMER_REQUEST
+        return {
+            "conversation_id": conversation_id,
+            "turn": 0,
+            "reply": WELCOME_MESSAGE,
+            "decision": "clarify",
+            "evidence_used": ["STY-1"],
+            "tool_call": None,
+            "verified": False,
+            "verification_required": False,
+            "order_id": None,
+            "ticket": None,
+            "state": session.state,
+            "language": language,
+        }
 
     def _normalize_spoken_text(self, text: str) -> str:
         s = text
@@ -281,10 +308,68 @@ class ConversationalAgent:
         # State Machine Branching
         # -------------------------------------------------------------
 
-        # CASE 1: Turn 1 purely polite greeting ("hello", "hi", "namaste") without order inquiry
+
+
+        # Explicit Human Support / Representative Request
+        is_agent_request = any(w in msg_lower for w in [
+            "human", "human agent", "representative", "executive", "person", "support team",
+            "customer care", "customer service representative", "talk to someone",
+            "speak to someone", "connect me", "escalate", "escalation", "manager",
+            "कस्टमर केयर", "एजेंट", "बात करनी है", "प्रतिनिधि", "इंसान"
+        ])
+        if is_agent_request:
+            decision = "escalate"
+            evidence_used = ["ESC-1"]
+            if session.ticket and session.ticket.get("created"):
+                existing_tid = session.ticket.get("ticket_id")
+                if is_hi:
+                    reply = f"Aapke request ke liye pehle hi support ticket {existing_tid} register kiya ja chuka hai. Hamari customer care team aapse jald hi judegi."
+                else:
+                    reply = f"Support ticket {existing_tid} has already been registered for your request. A customer care specialist is reviewing your inquiry and will connect with you shortly."
+            else:
+                summary_text = f"Customer requested human representative assistance. Inquiry: {msg_clean}"
+                if session.order_id:
+                    summary_text += f" (Order: {session.order_id})"
+                ticket_res = official_create_ticket(
+                    summary=summary_text,
+                    order_id=session.order_id,
+                    reason="human_agent_requested",
+                    intent="customer_support",
+                )
+                if ticket_res.get("created"):
+                    session.ticket = ticket_res
+                    tool_called = "create_ticket()"
+                    if is_hi:
+                        reply = f"Maine aapke liye support ticket {ticket_res.get('ticket_id')} create kar diya hai. Hamari customer care team aapse jald hi judegi."
+                    else:
+                        reply = f"I understand. I have created support ticket {ticket_res.get('ticket_id')} and escalated your request to a customer care specialist. They will assist you shortly."
+                else:
+                    evidence_used = ["ESC-4"]
+                    if is_hi:
+                        reply = "Kshama karein, is samay automated ticket create nahi ho paya. Kripya hamari helpline 1800-ZENTRO-CARE par call karein."
+                    else:
+                        reply = "I apologize, but I could not create an automated support ticket at this moment. Please reach out directly to our support helpline at 1800-ZENTRO-CARE."
+
+            session.turns.append({"customer": customer_message, "assistant": reply})
+            session.greeting_delivered = True
+            return {
+                "conversation_id": conversation_id,
+                "turn": current_turn,
+                "reply": reply,
+                "decision": decision,
+                "evidence_used": evidence_used,
+                "tool_call": tool_called,
+                "verified": session.verified,
+                "verification_required": session.verification_required,
+                "order_id": session.order_id,
+                "ticket": session.ticket,
+                "state": ConversationState.ERROR_RECOVERY,
+                "language": active_lang,
+            }
+
+        # CASE 1: Greeting without order inquiry
         is_generic_greeting = (
-            len(session.turns) == 0
-            and not session.order_id
+            not session.order_id
             and not session.initial_intent
             and any(msg_lower.startswith(g) for g in ["hi", "hello", "hey", "namaste", "नमस्ते", "good morning", "good afternoon"])
         )
@@ -292,12 +377,18 @@ class ConversationalAgent:
         if is_generic_greeting:
             decision = "clarify"
             evidence_used = ["STY-1"]
-            session.greeting_delivered = True
-            session.state = ConversationState.WAITING_FOR_CUSTOMER_REQUEST
-            if is_hi:
-                reply = "Namaste! Main ZentroMart ka AI customer support assistant hoon. Main aapki kya madad kar sakta hoon? Kripya apna 8-digit Order ID share karein agar aap order ke baare mein pooch rahe hain."
+            if session.greeting_delivered:
+                if is_hi:
+                    reply = "Main aapke orders, returns ya products ke baare mein kya madad kar sakta hoon? Kripya apna 8-digit Order ID batayein agar aap order ke baare mein pooch rahe hain."
+                else:
+                    reply = "How can I help you with your orders, deliveries, returns, or product inquiries today? Please share your 8-digit Order ID if you are inquiring about a specific order."
             else:
-                reply = "Hello! I am ZentroMart's AI customer support assistant. How can I help you today? Please share your 8-digit Order ID if you are inquiring about an order."
+                session.greeting_delivered = True
+                if is_hi:
+                    reply = "Namaste! Main ZentroMart ka AI customer support assistant hoon. Main aapki kya madad kar sakta hoon? Kripya apna 8-digit Order ID share karein agar aap order ke baare mein pooch rahe hain."
+                else:
+                    reply = WELCOME_MESSAGE
+            session.state = ConversationState.WAITING_FOR_CUSTOMER_REQUEST
 
         # CASE 2: Customer provides an Order ID, but is NOT yet verified
         elif (session.order_id and not session.verified) or (session.state == ConversationState.WAITING_FOR_VERIFICATION and not session.verified):
@@ -459,7 +550,16 @@ class ConversationalAgent:
                     if int(it.get("unit_price_inr") or 0) >= 10000:
                         is_high_value = True
 
-                if "compensation" in msg_lower or "500" in msg_lower or "मुआवजा" in msg_lower or "हर्जाना" in msg_lower:
+                if session.ticket and session.ticket.get("created"):
+                    existing_tid = session.ticket.get("ticket_id")
+                    decision = "escalate"
+                    evidence_used = ["ESC-1"]
+                    if is_hi:
+                        reply = f"Aapke order ke liye pehle hi support ticket {existing_tid} register kiya ja chuka hai. Hamari Priority Resolution team aapse jald hi judegi."
+                    else:
+                        reply = f"Support ticket {existing_tid} has already been created for your order. Our Priority Resolution team is reviewing your request and will assist you shortly."
+
+                elif "compensation" in msg_lower or "500" in msg_lower or "मुआवजा" in msg_lower or "हर्जाना" in msg_lower:
                     decision = "escalate"
                     evidence_used = ["ESC-1", "ESC-4"]
                     ticket_res = official_create_ticket(
@@ -468,12 +568,15 @@ class ConversationalAgent:
                         reason="compensation_request",
                         intent="compensation",
                     )
-                    session.ticket = ticket_res
-                    tool_called = "create_ticket()"
-                    if is_hi:
-                        reply = f"ZentroMart policy ke tehat automated compensation dena sambhav nahi hai. Maine aapki request ke liye support ticket {ticket_res['ticket_id']} create kar diya hai aur hamari team aapse jald hi sampark karegi."
+                    if ticket_res.get("created"):
+                        session.ticket = ticket_res
+                        tool_called = "create_ticket()"
+                        if is_hi:
+                            reply = f"ZentroMart policy ke tehat automated compensation dena sambhav nahi hai. Maine aapki request ke liye support ticket {ticket_res['ticket_id']} create kar diya hai aur hamari team aapse jald hi sampark karegi."
+                        else:
+                            reply = f"Under ZentroMart policy, our AI assistant cannot approve direct compensation requests. I have created ticket {ticket_res['ticket_id']} and forwarded your request to our Priority Resolution team."
                     else:
-                        reply = f"Under ZentroMart policy, our AI assistant cannot approve direct compensation requests. I have created ticket {ticket_res['ticket_id']} and forwarded your request to our Priority Resolution team."
+                        reply = "Under ZentroMart policy, our AI assistant cannot approve direct compensation requests. I was unable to create an automated support ticket at this moment; please contact customer care directly at 1800-ZENTRO-CARE."
 
                 elif is_high_value or "tv" in msg_lower or "smart tv" in msg_lower:
                     decision = "escalate"
@@ -484,12 +587,15 @@ class ConversationalAgent:
                         reason="high_value_damage",
                         intent="damaged_item",
                     )
-                    session.ticket = ticket_res
-                    tool_called = "create_ticket()"
-                    if is_hi:
-                        reply = f"₹10,000 se upar ke high-value electronics damage claims ke liye physical inspection zaroori hoti hai. Maine aapke case ko ticket {ticket_res['ticket_id']} ke saath Priority Resolution team ko handover kar diya hai."
+                    if ticket_res.get("created"):
+                        session.ticket = ticket_res
+                        tool_called = "create_ticket()"
+                        if is_hi:
+                            reply = f"₹10,000 se upar ke high-value electronics damage claims ke liye physical inspection zaroori hoti hai. Maine aapke case ko ticket {ticket_res['ticket_id']} ke saath Priority Resolution team ko handover kar diya hai."
+                        else:
+                            reply = f"For high-value electronics exceeding ₹10,000, replacement claims require physical inspection by our specialist team. I have logged ticket {ticket_res['ticket_id']} for Priority Resolution."
                     else:
-                        reply = f"For high-value electronics exceeding ₹10,000, replacement claims require physical inspection by our specialist team. I have logged ticket {ticket_res['ticket_id']} for Priority Resolution."
+                        reply = "For high-value electronics exceeding ₹10,000, replacement claims require physical inspection. I was unable to create an automated ticket at this moment; please contact our specialist support team at 1800-ZENTRO-CARE."
 
                 else:
                     decision = "answer"

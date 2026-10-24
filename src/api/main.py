@@ -122,6 +122,78 @@ def health_check():
     }
 
 
+class SessionInitRequest(BaseModel):
+    conversation_id: Optional[str] = None
+    language: Optional[str] = "en-IN"
+    speak: Optional[bool] = False
+
+
+@app.post("/api/session/init")
+def init_session_post(req: Optional[SessionInitRequest] = None):
+    cid = (req.conversation_id if req else None) or f"session_{uuid.uuid4().hex[:8]}"
+    lang = (req.language if req else None) or "en-IN"
+    speak = (req.speak if req else False)
+    res = conv_agent.init_session(cid, language=lang)
+    audio_url = None
+    voice_available = voice_service.is_configured()
+    voice_notice = None
+    if speak:
+        if voice_available:
+            out_filename = f"welcome_{uuid.uuid4().hex[:8]}.wav"
+            out_path = AUDIO_DIR / out_filename
+            synth_res = voice_service.synthesize(
+                res["reply"],
+                output_file=out_path,
+                voice="Kaveri",
+                model="timbre-v2.5",
+                language=lang,
+            )
+            if synth_res.get("success"):
+                audio_url = f"/static/audio/{out_filename}"
+        else:
+            voice_notice = "Voice output is currently unavailable. Operating in text mode."
+    return {
+        **res,
+        "audio_url": audio_url,
+        "voice_available": voice_available,
+        "voice_notice": voice_notice,
+    }
+
+
+@app.get("/api/session/init")
+def init_session_get(
+    conversation_id: Optional[str] = None,
+    language: Optional[str] = "en-IN",
+    speak: Optional[bool] = False,
+):
+    cid = conversation_id or f"session_{uuid.uuid4().hex[:8]}"
+    res = conv_agent.init_session(cid, language=language or "en-IN")
+    audio_url = None
+    voice_available = voice_service.is_configured()
+    voice_notice = None
+    if speak:
+        if voice_available:
+            out_filename = f"welcome_{uuid.uuid4().hex[:8]}.wav"
+            out_path = AUDIO_DIR / out_filename
+            synth_res = voice_service.synthesize(
+                res["reply"],
+                output_file=out_path,
+                voice="Kaveri",
+                model="timbre-v2.5",
+                language=language or "en-IN",
+            )
+            if synth_res.get("success"):
+                audio_url = f"/static/audio/{out_filename}"
+        else:
+            voice_notice = "Voice output is currently unavailable. Operating in text mode."
+    return {
+        **res,
+        "audio_url": audio_url,
+        "voice_available": voice_available,
+        "voice_notice": voice_notice,
+    }
+
+
 @app.post("/api/chat")
 def handle_chat(req: ChatRequest):
     cid = req.conversation_id or f"session_{uuid.uuid4().hex[:8]}"

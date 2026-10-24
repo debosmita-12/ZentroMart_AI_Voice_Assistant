@@ -50,56 +50,51 @@ export const App: React.FC = () => {
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSubmitPrompt = (text: string) => {
-    setQueuedPrompt(text);
-    handleOpenWorkspace();
-  };
-
   return (
-    <div className="bg-lavender-100 text-headingtext min-h-screen selection:bg-lavender-300 selection:text-lavender-900">
-      {/* Backend Spin-up Notice for Render Cold Starts */}
+    <div className="bg-[#F5F1E9] text-[#292621] min-h-screen selection:bg-[#C9A77B]/30 selection:text-[#292621]">
+      {/* Backend Spin-up Notice for Render Cold Starts in Warm Glass */}
       {connectionError && !health && (
-        <div className="fixed bottom-5 right-5 z-50 max-w-sm p-3.5 rounded-2xl liquid-glass border border-lavender-300 shadow-lavenderLg text-xs text-lavender-900 flex items-center gap-2.5 animate-in fade-in duration-300">
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping flex-shrink-0" />
+        <div className="fixed bottom-5 right-5 z-50 max-w-sm p-3.5 rounded-2xl warm-glass border border-[#DDD3C2] shadow-warmLg text-xs text-[#292621] flex items-center gap-2.5 animate-in fade-in duration-300 bg-white/90">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#C9A77B] animate-ping flex-shrink-0" />
           <div className="flex-1">
-            <p className="font-semibold text-headingtext">Connecting to Backend</p>
-            <p className="text-[11px] text-bodytext mt-0.5">
+            <p className="font-semibold text-[#292621]">Connecting to Backend</p>
+            <p className="text-[11px] text-[#777064] mt-0.5">
               Connecting to {API_BASE_URL || "backend"}. Render cloud instance may take ~30s to wake up.
             </p>
           </div>
         </div>
       )}
 
-      {/* 1. Floating Lavender Glass Navbar */}
+      {/* 1. Floating Warm Glass Navbar */}
       <Navbar health={health} onOpenWorkspace={handleOpenWorkspace} />
 
-      {/* 2. Dedicated Cinematic Lavender Landing Page Hero */}
+      {/* 2. Sculptural 3D Warm Ivory & Champagne Hero */}
       <Hero
         health={health}
         onOpenWorkspace={handleOpenWorkspace}
         onStartVoice={handleOpenWorkspace}
       />
 
-      {/* 3. Four Core Capabilities */}
+      {/* 3. Core Capabilities in Warm Translucent Glass */}
       <CapabilitiesSection />
 
-      {/* 4. Four Steps: How It Works Timeline */}
+      {/* 4. Five Stages: How It Works Visual Pipeline */}
       <HowItWorksSection />
 
-      {/* 5. Launch Assistant & Interactive Support Console */}
+      {/* 5. Interactive Support Console & Voice Assistant */}
       <SupportWorkspace
         health={health}
         initialPrompt={queuedPrompt}
         onClearInitialPrompt={() => setQueuedPrompt("")}
       />
 
-      {/* 6. Evaluation Dashboard & Live Precedence Inspector */}
+      {/* 6. Evaluation Benchmarks & Live Precedence Inspector */}
       <DeveloperDrawer />
 
       {/* 7. Organized Capstone Deliverables Checklist */}
       <DeliverablesSection />
 
-      {/* 8. Footer with Made by — Debosmita */}
+      {/* 8. Minimalist Footer with Made by — Debosmita */}
       <Footer />
     </div>
   );

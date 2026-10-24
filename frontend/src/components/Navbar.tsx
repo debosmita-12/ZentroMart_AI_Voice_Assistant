@@ -11,14 +11,13 @@ export const Navbar: React.FC<NavbarProps> = ({ health, onOpenWorkspace }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="fixed top-5 left-0 right-0 z-50 px-4 sm:px-6">
-      <nav className="liquid-glass rounded-full max-w-5xl mx-auto px-5 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shadow-organicGlass border border-lavender-300/60 backdrop-blur-xl">
-        {/* Left: Brand Identity with Custom SVG Robot / Conversational Icon */}
-        <a href="#hero" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-lavender-700 to-lavender-500 flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-all">
-            {/* Custom SVG conversational robot icon */}
+    <header className="fixed top-4 left-0 right-0 z-50 px-4 sm:px-6 xl:px-10">
+      <nav className="warm-glass rounded-full w-full max-w-[1520px] mx-auto px-5 sm:px-8 py-3 flex items-center justify-between shadow-[0_12px_36px_rgba(60,50,40,0.07)] border border-white/95 backdrop-blur-xl bg-white/80">
+        {/* Left: Brand Identity (flex-shrink-0 to prevent compression) */}
+        <a href="#hero" className="flex items-center gap-2.5 flex-shrink-0 group">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#292621] to-[#433E36] flex items-center justify-center text-[#F5F1E9] shadow-sm group-hover:scale-105 transition-all">
             <svg
-              className="w-4 h-4 text-white"
+              className="w-4 h-4 text-[#F5F1E9]"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -35,57 +34,57 @@ export const Navbar: React.FC<NavbarProps> = ({ health, onOpenWorkspace }) => {
               <path d="M21 15h1" />
             </svg>
           </div>
-          <span className="text-headingtext font-semibold text-base sm:text-lg tracking-tight">
-            ZentroMart <span className="text-lavender-700 font-medium">AI</span>
+          <span className="text-[#292621] font-semibold text-base sm:text-lg tracking-tight whitespace-nowrap">
+            ZentroMart <span className="text-[#C9A77B] font-medium">AI</span>
           </span>
         </a>
 
-        {/* Center: Desktop Navigation Links */}
-        <div className="hidden md:flex items-center gap-6 lg:gap-7">
+        {/* Center: Desktop Navigation Links (strictly single-line, whitespace-nowrap, balanced spacing) */}
+        <div className="hidden lg:flex items-center justify-center flex-1 mx-6 xl:mx-10 gap-5 xl:gap-8 2xl:gap-10">
           <a
             href="#hero"
-            className="text-bodytext hover:text-lavender-700 text-xs uppercase tracking-wider font-medium transition-colors"
+            className="text-[#777064] hover:text-[#292621] text-xs uppercase tracking-wider font-medium transition-colors whitespace-nowrap flex-shrink-0"
           >
             Home
           </a>
           <a
             href="#capabilities"
-            className="text-bodytext hover:text-lavender-700 text-xs uppercase tracking-wider font-medium transition-colors"
+            className="text-[#777064] hover:text-[#292621] text-xs uppercase tracking-wider font-medium transition-colors whitespace-nowrap flex-shrink-0"
           >
             Capabilities
           </a>
           <a
             href="#how-it-works"
-            className="text-bodytext hover:text-lavender-700 text-xs uppercase tracking-wider font-medium transition-colors"
+            className="text-[#777064] hover:text-[#292621] text-xs uppercase tracking-wider font-medium transition-colors whitespace-nowrap flex-shrink-0"
           >
-            How it works
+            How It Works
           </a>
           <a
             href="#support-workspace"
             onClick={onOpenWorkspace}
-            className="text-bodytext hover:text-lavender-700 text-xs uppercase tracking-wider font-medium transition-colors"
+            className="text-[#777064] hover:text-[#292621] text-xs uppercase tracking-wider font-medium transition-colors whitespace-nowrap flex-shrink-0"
           >
             Voice Assistant
           </a>
           <a
             href="#developer"
-            className="text-bodytext hover:text-lavender-700 text-xs uppercase tracking-wider font-medium transition-colors"
+            className="text-[#777064] hover:text-[#292621] text-xs uppercase tracking-wider font-medium transition-colors whitespace-nowrap flex-shrink-0"
           >
             Evaluation
           </a>
           <a
             href="#deliverables"
-            className="text-bodytext hover:text-lavender-700 text-xs uppercase tracking-wider font-medium transition-colors"
+            className="text-[#777064] hover:text-[#292621] text-xs uppercase tracking-wider font-medium transition-colors whitespace-nowrap flex-shrink-0"
           >
             Deliverables
           </a>
         </div>
 
-        {/* Right: Truthful Voice Status and Launch Assistant CTA */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
+        {/* Right: Truthful Voice Ready Indicator & Compact Glowing Pill CTA (flex-shrink-0) */}
+        <div className="flex items-center gap-3 flex-shrink-0">
           {health ? (
             <div
-              className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-lavender-200/90 text-[11px] text-bodytext shadow-sm"
+              className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-[#E2D9CC] text-[11px] text-[#777064] shadow-sm whitespace-nowrap flex-shrink-0"
               title={
                 health.gnani_configured
                   ? "Gnani Voice Engine Connected (16kHz Audio Pipeline)"
@@ -94,36 +93,37 @@ export const Navbar: React.FC<NavbarProps> = ({ health, onOpenWorkspace }) => {
             >
               <span
                 className={`w-2 h-2 rounded-full ${
-                  health.gnani_configured ? "bg-status-green" : "bg-lavender-600"
-                } animate-pulse`}
+                  health.gnani_configured ? "bg-[#1B633E]" : "bg-[#C9A77B]"
+                } animate-pulse flex-shrink-0`}
               />
-              <span className="font-medium text-headingtext">
+              <span className="font-medium text-[#292621] whitespace-nowrap">
                 {health.gnani_configured ? "Voice Ready" : "Text Ready"}
               </span>
             </div>
           ) : (
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-lavender-200/90 text-[11px] text-bodytext shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-lavender-400 animate-pulse" />
-              <span className="font-medium text-bodytext">Connecting...</span>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-[#E2D9CC] text-[11px] text-[#777064] shadow-sm whitespace-nowrap flex-shrink-0">
+              <span className="w-2 h-2 rounded-full bg-[#C9A77B] animate-pulse flex-shrink-0" />
+              <span className="font-medium text-[#777064] whitespace-nowrap">Connecting...</span>
             </div>
           )}
 
+          {/* Compact Illuminated Glowing Pill CTA Button */}
           <button
             onClick={() => {
               onOpenWorkspace();
               const el = document.getElementById("support-workspace");
               if (el) el.scrollIntoView({ behavior: "smooth" });
             }}
-            className="bg-lavender-700 text-white hover:bg-lavender-800 px-4 sm:px-5 py-2 rounded-full text-xs font-medium flex items-center gap-2 shadow-lavender transition-all cursor-pointer hover:shadow-lavenderLg"
+            className="glowing-cta-btn px-4 sm:px-5 py-2 rounded-full text-xs font-semibold flex items-center gap-2 cursor-pointer transition-all whitespace-nowrap flex-shrink-0"
           >
-            <Sparkles className="w-3.5 h-3.5 text-lavender-300" />
+            <Sparkles className="w-3.5 h-3.5 text-[#C9A77B] flex-shrink-0" />
             <span>Launch Assistant</span>
           </button>
 
-          {/* Mobile menu trigger */}
+          {/* Mobile / Tablet Menu Trigger (visible on screens < lg) */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-headingtext hover:text-lavender-700 focus:outline-none"
+            className="lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-[#292621] hover:text-[#C9A77B] focus:outline-none flex-shrink-0"
             aria-label="Toggle navigation"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -131,29 +131,29 @@ export const Navbar: React.FC<NavbarProps> = ({ health, onOpenWorkspace }) => {
         </div>
       </nav>
 
-      {/* Mobile Menu Drawer */}
+      {/* Mobile / Tablet Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden mt-3 max-w-5xl mx-auto liquid-glass rounded-2xl p-5 flex flex-col gap-3.5 shadow-lavenderLg border border-lavender-300/80 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="lg:hidden mt-3 max-w-[1520px] mx-auto warm-glass rounded-2xl p-5 flex flex-col gap-3.5 shadow-warmLg border border-[#E2D9CC] bg-white/95 animate-in fade-in slide-in-from-top-2 duration-200">
           <a
             href="#hero"
             onClick={() => setMobileMenuOpen(false)}
-            className="text-bodytext hover:text-lavender-700 text-sm font-medium py-1"
+            className="text-[#777064] hover:text-[#292621] text-sm font-medium py-1"
           >
             Home
           </a>
           <a
             href="#capabilities"
             onClick={() => setMobileMenuOpen(false)}
-            className="text-bodytext hover:text-lavender-700 text-sm font-medium py-1"
+            className="text-[#777064] hover:text-[#292621] text-sm font-medium py-1"
           >
             Capabilities
           </a>
           <a
             href="#how-it-works"
             onClick={() => setMobileMenuOpen(false)}
-            className="text-bodytext hover:text-lavender-700 text-sm font-medium py-1"
+            className="text-[#777064] hover:text-[#292621] text-sm font-medium py-1"
           >
-            How it works
+            How It Works
           </a>
           <a
             href="#support-workspace"
@@ -161,29 +161,29 @@ export const Navbar: React.FC<NavbarProps> = ({ health, onOpenWorkspace }) => {
               setMobileMenuOpen(false);
               onOpenWorkspace();
             }}
-            className="text-bodytext hover:text-lavender-700 text-sm font-medium py-1"
+            className="text-[#777064] hover:text-[#292621] text-sm font-medium py-1"
           >
             Voice Assistant
           </a>
           <a
             href="#developer"
             onClick={() => setMobileMenuOpen(false)}
-            className="text-bodytext hover:text-lavender-700 text-sm font-medium py-1"
+            className="text-[#777064] hover:text-[#292621] text-sm font-medium py-1"
           >
             Evaluation
           </a>
           <a
             href="#deliverables"
             onClick={() => setMobileMenuOpen(false)}
-            className="text-bodytext hover:text-lavender-700 text-sm font-medium py-1"
+            className="text-[#777064] hover:text-[#292621] text-sm font-medium py-1"
           >
             Deliverables
           </a>
 
-          <div className="pt-2 border-t border-lavender-200/80 flex items-center justify-between text-xs">
-            <span className="text-bodytext">Voice Status</span>
-            <span className="font-medium text-status-green flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-status-green animate-pulse" />
+          <div className="pt-2 border-t border-[#E2D9CC] flex items-center justify-between text-xs">
+            <span className="text-[#777064]">Voice Status</span>
+            <span className="font-medium text-[#1B633E] flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#1B633E] animate-pulse" />
               {health?.gnani_configured ? "Gnani Voice Ready" : "Grounded Text Mode"}
             </span>
           </div>

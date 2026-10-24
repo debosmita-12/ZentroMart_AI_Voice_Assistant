@@ -1,5 +1,5 @@
 import React from "react";
-import { Mic, Headphones, Sparkles, Volume2, ArrowRight, Play, Cpu, Database } from "lucide-react";
+import { Mic, Headphones, Sparkles, Volume2, ArrowRight, Cpu } from "lucide-react";
 import { motion } from "framer-motion";
 
 export const HowItWorksSection: React.FC = () => {
@@ -42,26 +42,26 @@ export const HowItWorksSection: React.FC = () => {
   ];
 
   return (
-    <section id="how-it-works" className="py-28 px-4 sm:px-6 max-w-6xl mx-auto border-t border-lavender-200/80">
+    <section id="how-it-works" className="py-28 px-6 sm:px-10 xl:px-14 max-w-[1520px] mx-auto border-t border-[#E2D9CC]">
       {/* Header */}
       <div className="text-center mb-16">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-lavender-200/90 text-lavender-900 text-xs font-semibold uppercase tracking-wider mb-3.5 border border-lavender-300">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EFE9DF] text-[#5E4B33] text-xs font-semibold uppercase tracking-wider mb-3.5 border border-[#DDD3C2]">
           Visual Pipeline
         </div>
-        <h2 className="font-serif text-3xl sm:text-5xl text-headingtext tracking-tight mb-4">
-          Five stages to <span className="italic font-normal text-lavender-700">intelligent resolution.</span>
+        <h2 className="font-serif text-3xl sm:text-5xl xl:text-6xl text-[#292621] tracking-tight mb-4">
+          Five stages to <span className="italic font-normal text-[#C9A77B]">intelligent resolution.</span>
         </h2>
-        <p className="text-bodytext text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+        <p className="text-[#777064] text-sm sm:text-base xl:text-lg max-w-2xl mx-auto leading-relaxed">
           How ZentroMart AI processes every customer utterance through the end-to-end voice and policy pipeline.
         </p>
       </div>
 
-      {/* Horizontal Pipeline on Desktop / Vertical Sequence on Mobile */}
+      {/* Horizontal Pipeline spanning full width on Desktop */}
       <div className="relative">
-        {/* Connecting Lavender Line on Desktop */}
-        <div className="hidden lg:block absolute top-1/2 left-8 right-8 h-[2px] bg-gradient-to-r from-lavender-300 via-lavender-400 to-lavender-300 -translate-y-8 z-0" />
+        {/* Connecting Champagne Gold Line on Desktop */}
+        <div className="hidden lg:block absolute top-1/2 left-10 right-10 h-[2px] bg-gradient-to-r from-[#DDD3C2] via-[#C9A77B] to-[#DDD3C2] -translate-y-8 z-0" />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 xl:gap-6 relative z-10">
           {pipeline.map((p, idx) => {
             const Icon = p.icon;
             return (
@@ -71,36 +71,36 @@ export const HowItWorksSection: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: idx * 0.08 }}
-                className="liquid-glass rounded-3xl p-6 flex flex-col justify-between border border-lavender-300/80 shadow-organicGlass hover:border-lavender-400 transition-all bg-white/95 group"
+                className="warm-glass rounded-3xl p-6 xl:p-7 flex flex-col justify-between border border-[#E2D9CC] shadow-warmGlass hover:border-[#C9A77B] transition-all bg-white/90 group"
               >
                 <div>
                   {/* Top node header */}
                   <div className="flex items-center justify-between mb-5">
-                    <span className="font-mono text-xs font-bold text-lavender-800 bg-lavender-100 px-2.5 py-1 rounded-full border border-lavender-200">
+                    <span className="font-mono text-xs font-bold text-[#5E4B33] bg-[#F5F0E8] px-2.5 py-1 rounded-full border border-[#DDD3C2]">
                       {p.step}
                     </span>
-                    <div className="w-10 h-10 rounded-2xl bg-lavender-200 text-lavender-800 flex items-center justify-center border border-lavender-300 shadow-sm group-hover:bg-lavender-700 group-hover:text-white transition-colors">
+                    <div className="w-10 h-10 rounded-2xl bg-[#F6EDE2] text-[#8C6D42] flex items-center justify-center border border-[#E2D9CC] shadow-sm group-hover:bg-[#292621] group-hover:text-[#F5F1E9] transition-colors">
                       <Icon className="w-5 h-5" />
                     </div>
                   </div>
 
-                  <h3 className="text-headingtext font-semibold text-base mb-1">
+                  <h3 className="text-[#292621] font-semibold text-base xl:text-lg mb-1">
                     {p.title}
                   </h3>
-                  <p className="text-lavender-700 text-xs font-medium mb-3">
+                  <p className="text-[#C9A77B] text-xs font-medium mb-3">
                     {p.sub}
                   </p>
-                  <p className="text-bodytext text-xs leading-relaxed">
+                  <p className="text-[#777064] text-xs xl:text-sm leading-relaxed">
                     {p.desc}
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-lavender-100 flex items-center justify-between text-[11px] text-bodytext">
-                  <span className="font-mono text-[10px] text-lavender-600">Stage {p.step}</span>
+                <div className="mt-5 pt-3 border-t border-[#EAE3D6] flex items-center justify-between text-[11px] text-[#777064]">
+                  <span className="font-mono text-[10px] text-[#8C6D42]">Stage {p.step}</span>
                   {idx < pipeline.length - 1 ? (
-                    <ArrowRight className="w-3.5 h-3.5 text-lavender-400 lg:hidden" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#C9A77B] lg:hidden" />
                   ) : (
-                    <span className="text-[10px] text-status-green font-medium">Completed</span>
+                    <span className="text-[10px] text-[#1B633E] font-medium">Completed</span>
                   )}
                 </div>
               </motion.div>

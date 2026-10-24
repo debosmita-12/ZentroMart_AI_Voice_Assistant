@@ -22,6 +22,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { ChatMessage, BackendHealth } from "../types";
+import { apiUrl, resolveAudioUrl } from "../config/api";
 
 interface SupportWorkspaceProps {
   health: BackendHealth | null;
@@ -130,7 +131,7 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
     setInteractionState("thinking");
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch(apiUrl("/api/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -141,7 +142,7 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
         }),
       });
 
-      if (!res.ok) throw new Error("Server communication error");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
       if (data.conversation_id && data.conversation_id !== conversationId) {
@@ -159,6 +160,8 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
         setActiveTicket(data.ticket.ticket_id);
       }
 
+      const resolvedAudio = data.audio_url ? resolveAudioUrl(data.audio_url) : undefined;
+
       const botMsg: ChatMessage = {
         id: `bot_${Date.now()}`,
         sender: "assistant",
@@ -168,6 +171,7 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
         evidence_used: data.evidence_used || [],
         detailed_evidence: data.detailed_evidence || [],
         tool_call: data.tool_call,
+        audio_url: resolvedAudio,
         verified: data.verified,
         ticket: data.ticket,
       };
@@ -179,7 +183,7 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
         {
           id: `bot_err_${Date.now()}`,
           sender: "assistant",
-          text: "I experienced a temporary connection interruption. Please retry your message or reach out to our team.",
+          text: "Unable to reach ZentroMart backend service. If the server is waking up on Render, please wait a moment and retry your message.",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
@@ -271,7 +275,7 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
     formData.append("language", selectedLang);
 
     try {
-      const res = await fetch("/api/voice/process", {
+      const res = await fetch(apiUrl("/api/voice/process"), {
         method: "POST",
         body: formData,
       });
@@ -316,6 +320,8 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
         setActiveTicket(data.ticket.ticket_id);
       }
 
+      const resolvedAudio = data.audio_url ? resolveAudioUrl(data.audio_url) : undefined;
+
       // Add assistant response
       const botMsg: ChatMessage = {
         id: `bot_voice_${Date.now()}`,
@@ -326,7 +332,7 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
         evidence_used: data.evidence_used || [],
         detailed_evidence: data.detailed_evidence || [],
         tool_call: data.tool_call,
-        audio_url: data.audio_url,
+        audio_url: resolvedAudio,
         verified: data.verified,
         ticket: data.ticket,
       };
@@ -334,13 +340,13 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
       setMessages((prev) => [...prev, botMsg]);
 
       // Auto-play audio if generated
-      if (data.audio_url) {
-        playAudio(data.audio_url);
+      if (resolvedAudio) {
+        playAudio(resolvedAudio);
       } else {
         setInteractionState("ready");
       }
     } catch (err: any) {
-      setVoiceNotice("Network error communicating with backend voice endpoint.");
+      setVoiceNotice("Network error communicating with backend voice endpoint. If the server is waking up on Render, please wait a moment and retry.");
       setInteractionState("ready");
     } finally {
       isSubmittingRef.current = false;
@@ -349,8 +355,9 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
 
   const playAudio = (url: string) => {
     if (audioPlayerRef.current) {
+      const resolvedUrl = resolveAudioUrl(url);
       setInteractionState("speaking");
-      audioPlayerRef.current.src = url;
+      audioPlayerRef.current.src = resolvedUrl;
       audioPlayerRef.current.play().catch(() => {
         setInteractionState("ready");
       });
@@ -364,7 +371,7 @@ export const SupportWorkspace: React.FC<SupportWorkspaceProps> = ({
 
   const handleResetSession = async () => {
     try {
-      await fetch("/api/reset", {
+      await fetch(apiUrl("/api/reset"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ conversation_id: conversationId }),

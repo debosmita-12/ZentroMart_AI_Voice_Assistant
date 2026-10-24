@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, Database, BarChart2, Terminal, CheckCircle2, ShieldCheck, ArrowUpRight } from "lucide-react";
 import { EvaluationSummary } from "../types";
+import { apiUrl } from "../config/api";
 
 export const DeveloperDrawer: React.FC = () => {
   const [evalSummary, setEvalSummary] = useState<EvaluationSummary | null>(null);
@@ -10,7 +11,7 @@ export const DeveloperDrawer: React.FC = () => {
 
   useEffect(() => {
     // Fetch evaluation summary from real backend endpoint
-    fetch("/api/evaluate/status")
+    fetch(apiUrl("/api/evaluate/status"))
       .then((res) => res.json())
       .then((data) => {
         if (data && data.total_questions) setEvalSummary(data);
@@ -25,7 +26,7 @@ export const DeveloperDrawer: React.FC = () => {
     if (!q.trim()) return;
     setIsSearching(true);
     try {
-      const res = await fetch(`/api/kb/search?q=${encodeURIComponent(q)}&top_k=4`);
+      const res = await fetch(apiUrl(`/api/kb/search?q=${encodeURIComponent(q)}&top_k=4`));
       const data = await res.json();
       setSearchResults(data);
     } catch (err) {

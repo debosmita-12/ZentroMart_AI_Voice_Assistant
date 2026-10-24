@@ -216,6 +216,12 @@ npm run dev
 ```
 Open your browser at: **`http://localhost:5173`**
 
+### Option C: Production Cloud Deployment (Vercel + Render)
+- **Backend (Render):** FastAPI hosted at `https://zentromart-ai-backend.onrender.com` with CORS configured for Vercel origins (`allow_origin_regex=r"^https://.*\.vercel\.app$"`).
+- **Frontend (Vercel):** Single-Page Application deployed from the `frontend/` directory.
+  - Environment Variable on Vercel: `VITE_API_BASE_URL=https://zentromart-ai-backend.onrender.com`
+  - Audio and API paths automatically resolve against the production Render backend while securely retaining all API keys (`GOOGLE_API_KEY`, `GNANI_API_KEY`) on Render.
+
 ---
 
 ## 🎙️ Mandatory Batch Audio CLI Runner

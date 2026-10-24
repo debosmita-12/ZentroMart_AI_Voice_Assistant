@@ -31,12 +31,31 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Enable CORS for frontend Vite dev server and production builds
+# Configure CORS explicitly for Vercel production frontend and local development.
+# Avoids wildcard '*' when allow_credentials=True in accordance with W3C CORS specifications.
+cors_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://zentromart-ai-backend.onrender.com",
+]
+
+extra_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+if extra_origins:
+    for origin in extra_origins.split(","):
+        cleaned = origin.strip()
+        if cleaned and cleaned not in cors_origins:
+            cors_origins.append(cleaned)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["*"],
 )
 
